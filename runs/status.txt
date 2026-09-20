@@ -1,3 +1,3 @@
-stage: FIXES
-step: Item 1 regression check running (task-4867), Item 6 completed (5-repeat C2ST 0.4952 +/- 0.0283, Noise MIA 0.5132 +/- 0.0282)
-ETA: 15 minutes remaining for fixes and Tier A
+stage: TIER A
+step: Tier A execution completed with STOP RULE triggered; supplementary diagnostics (Steps b & c) finishing.
+ETA: 1 minute

@@ -1,0 +1,28 @@
+﻿================================================================================
+ TIER A BENCHMARK (Adult 30k, validation half, seed 42, 1 seed, 3-min timeout/step)
+================================================================================
+Data split: Train=15000 rows | Validation=15000 rows
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+Encoded and scaled X: torch.Size([15000, 78]) (d=78)
+
+======================================================================
+ Step a: Non-Private Identity Flow (40 epochs, AdamW lr=2e-3, B=512)
+======================================================================
+  Epoch 10/40 | Flow Loss: 0.3696
+  Epoch 20/40 | Flow Loss: 0.3129
+  Epoch 30/40 | Flow Loss: 0.2826
+  Epoch 40/40 | Flow Loss: 0.2574
+
+Step a Results (Elapsed: 5.6s):
+  Normalized 1-way TVD:       23.3316x (Raw: 0.1773, Floor: 0.0076)
+  Normalized 2-way TVD:       17.0049x
+  Normalized Correlation:     4.4681x
+  Standardized SWD:           0.2117
+  Pre-clamp OOB fraction:     6.82%
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+DESIGN BUG: Non-private normalized 1-way TVD is 23.33x (threshold is 10.0x)
+Diagnostics: OOB Frac = 6.82%, Standardized SWD = 0.2117
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+DESIGN BUG, total time: 5.8s
