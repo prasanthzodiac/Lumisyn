@@ -1,0 +1,269 @@
+{
+  "T6_baselines": {
+    "floor_1way": 0.0076,
+    "floor_2way": 0.0203,
+    "floor_corr": 0.0626,
+    "independent_dp_marginals": {
+      "raw_1way_tvd": 0.0162,
+      "floor_1way": 0.0076,
+      "norm_1way_tvd": 2.1377,
+      "raw_2way_tvd": 0.2082,
+      "floor_2way": 0.0203,
+      "norm_2way_tvd": 10.25615763546798,
+      "frob_corr": 0.3971,
+      "floor_corr": 0.0626,
+      "norm_corr": 6.343450479233226,
+      "swd": 0.408171,
+      "per_feature_1way": {
+        "age": 0.0205,
+        "workclass": 0.0042,
+        "fnlwgt": 0.0163,
+        "education": 0.023,
+        "education-num": 0.0301,
+        "marital-status": 0.007,
+        "occupation": 0.0153,
+        "relationship": 0.0065,
+        "race": 0.0075,
+        "sex": 0.0093,
+        "capital-gain": 0.0152,
+        "capital-loss": 0.0244,
+        "hours-per-week": 0.0202,
+        "native-country": 0.0396,
+        "class": 0.0046
+      }
+    }
+  },
+  "T1_epoch_sweep": {
+    "40": {
+      "raw_1way_tvd": 0.1798,
+      "floor_1way": 0.0076,
+      "norm_1way_tvd": 23.6614,
+      "raw_2way_tvd": 0.3463,
+      "floor_2way": 0.0203,
+      "norm_2way_tvd": 17.059113300492612,
+      "frob_corr": 0.2464,
+      "floor_corr": 0.0626,
+      "norm_corr": 3.9361022364217253,
+      "swd": 0.215054,
+      "per_feature_1way": {
+        "age": 0.1051,
+        "workclass": 0.0639,
+        "fnlwgt": 0.1338,
+        "education": 0.1112,
+        "education-num": 0.47,
+        "marital-status": 0.0565,
+        "occupation": 0.0732,
+        "relationship": 0.0626,
+        "race": 0.0363,
+        "sex": 0.0355,
+        "capital-gain": 0.0609,
+        "capital-loss": 0.2035,
+        "hours-per-week": 0.4308,
+        "native-country": 0.78,
+        "class": 0.0741
+      },
+      "final_flow_loss": 0.25739704867204033,
+      "zero_pred_baseline": 1.1916077584028244,
+      "loss_vs_zero_ratio": 0.2160082014043307,
+      "oob_fraction": 0.0682615339756012,
+      "train_time": 5.6417012214660645
+    },
+    "200": {
+      "raw_1way_tvd": 0.1666,
+      "floor_1way": 0.0076,
+      "norm_1way_tvd": 21.9228,
+      "raw_2way_tvd": 0.3839,
+      "floor_2way": 0.0203,
+      "norm_2way_tvd": 18.911330049261085,
+      "frob_corr": 0.1961,
+      "floor_corr": 0.0626,
+      "norm_corr": 3.13258785942492,
+      "swd": 0.195646,
+      "per_feature_1way": {
+        "age": 0.1479,
+        "workclass": 0.103,
+        "fnlwgt": 0.1261,
+        "education": 0.1265,
+        "education-num": 0.4076,
+        "marital-status": 0.0867,
+        "occupation": 0.0697,
+        "relationship": 0.0979,
+        "race": 0.065,
+        "sex": 0.0157,
+        "capital-gain": 0.0131,
+        "capital-loss": 0.096,
+        "hours-per-week": 0.4032,
+        "native-country": 0.6934,
+        "class": 0.0474
+      },
+      "final_flow_loss": 0.20227146645387015,
+      "zero_pred_baseline": 1.1916077584028244,
+      "loss_vs_zero_ratio": 0.16974668470183965,
+      "oob_fraction": 0.06847093999385834,
+      "train_time": 22.292500734329224
+    },
+    "600": {
+      "raw_1way_tvd": 0.1247,
+      "floor_1way": 0.0076,
+      "norm_1way_tvd": 16.4114,
+      "raw_2way_tvd": 0.3167,
+      "floor_2way": 0.0203,
+      "norm_2way_tvd": 15.600985221674877,
+      "frob_corr": 0.1857,
+      "floor_corr": 0.0626,
+      "norm_corr": 2.966453674121406,
+      "swd": 0.164987,
+      "per_feature_1way": {
+        "age": 0.0792,
+        "workclass": 0.0543,
+        "fnlwgt": 0.0634,
+        "education": 0.0712,
+        "education-num": 0.3629,
+        "marital-status": 0.0977,
+        "occupation": 0.1146,
+        "relationship": 0.0752,
+        "race": 0.0546,
+        "sex": 0.0585,
+        "capital-gain": 0.0149,
+        "capital-loss": 0.0621,
+        "hours-per-week": 0.3681,
+        "native-country": 0.3513,
+        "class": 0.0429
+      },
+      "final_flow_loss": 0.17709703743457794,
+      "zero_pred_baseline": 1.1916077584028244,
+      "loss_vs_zero_ratio": 0.148620245366605,
+      "oob_fraction": 0.05824700742959976,
+      "train_time": 62.71737003326416
+    }
+  },
+  "T2_arch_comparison": {
+    "128x2": {
+      "raw_1way_tvd": 0.1666,
+      "floor_1way": 0.0076,
+      "norm_1way_tvd": 21.9228,
+      "raw_2way_tvd": 0.3839,
+      "floor_2way": 0.0203,
+      "norm_2way_tvd": 18.911330049261085,
+      "frob_corr": 0.1961,
+      "floor_corr": 0.0626,
+      "norm_corr": 3.13258785942492,
+      "swd": 0.195646,
+      "per_feature_1way": {
+        "age": 0.1479,
+        "workclass": 0.103,
+        "fnlwgt": 0.1261,
+        "education": 0.1265,
+        "education-num": 0.4076,
+        "marital-status": 0.0867,
+        "occupation": 0.0697,
+        "relationship": 0.0979,
+        "race": 0.065,
+        "sex": 0.0157,
+        "capital-gain": 0.0131,
+        "capital-loss": 0.096,
+        "hours-per-week": 0.4032,
+        "native-country": 0.6934,
+        "class": 0.0474
+      },
+      "final_flow_loss": 0.20227146645387015,
+      "zero_pred_baseline": 1.1916077584028244,
+      "loss_vs_zero_ratio": 0.16974668470183965,
+      "oob_fraction": 0.06847093999385834,
+      "train_time": 22.292500734329224
+    },
+    "256x3": {
+      "raw_1way_tvd": 0.1199,
+      "floor_1way": 0.0076,
+      "norm_1way_tvd": 15.7781,
+      "raw_2way_tvd": 0.3137,
+      "floor_2way": 0.0203,
+      "norm_2way_tvd": 15.45320197044335,
+      "frob_corr": 0.1791,
+      "floor_corr": 0.0626,
+      "norm_corr": 2.8610223642172525,
+      "swd": 0.17832,
+      "per_feature_1way": {
+        "age": 0.1485,
+        "workclass": 0.0357,
+        "fnlwgt": 0.091,
+        "education": 0.0824,
+        "education-num": 0.3366,
+        "marital-status": 0.0607,
+        "occupation": 0.0954,
+        "relationship": 0.0698,
+        "race": 0.0264,
+        "sex": 0.0328,
+        "capital-gain": 0.0181,
+        "capital-loss": 0.0329,
+        "hours-per-week": 0.3857,
+        "native-country": 0.3526,
+        "class": 0.0301
+      },
+      "final_flow_loss": 0.16523557553688686,
+      "zero_pred_baseline": 1.1916077584028244,
+      "loss_vs_zero_ratio": 0.13866607897749922,
+      "oob_fraction": 0.0711931586265564,
+      "train_time": 24.752432823181152
+    }
+  },
+  "T3_worst_and_decode": {
+    "worst_10_argmax": [
+      [
+        "hours-per-week",
+        0.3857
+      ],
+      [
+        "native-country",
+        0.3526
+      ],
+      [
+        "education-num",
+        0.3366
+      ],
+      [
+        "age",
+        0.1485
+      ],
+      [
+        "occupation",
+        0.0954
+      ],
+      [
+        "fnlwgt",
+        0.091
+      ],
+      [
+        "education",
+        0.0824
+      ],
+      [
+        "relationship",
+        0.0698
+      ],
+      [
+        "marital-status",
+        0.0607
+      ],
+      [
+        "workclass",
+        0.0357
+      ]
+    ],
+    "argmax_norm_1way": 15.7781,
+    "argmax_norm_2way": 15.45320197044335,
+    "softmax_norm_1way": 43.1886,
+    "softmax_norm_2way": 27.211822660098523
+  },
+  "T4_oracle_recalibration": {
+    "norm_1way_tvd": 0.0149,
+    "norm_2way_tvd": 2.5517241379310347,
+    "norm_corr": 3.277955271565495,
+    "swd": 0.053134
+  },
+  "T5_prior_scale": "SKIPPED_DUE_TO_NONPRIVATE_TVD_GT_10X",
+  "T7_run_to_run": {
+    "corr_frobenius_difference": 0.0,
+    "corr_max_difference": 0.0
+  }
+}
