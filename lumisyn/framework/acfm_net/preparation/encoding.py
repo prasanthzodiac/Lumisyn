@@ -75,7 +75,19 @@ class DistributionPreservingEncoder:
         for col in self.column_order:
             series = df[col]
             is_num = pd.api.types.is_numeric_dtype(series)
-            schema = (privacy_schema or {}).get(col, {})
+            schema = {}
+            if privacy_schema and isinstance(privacy_schema, dict):
+                if col in privacy_schema:
+                    schema = privacy_schema[col]
+                elif "columns" in privacy_schema:
+                    cols_data = privacy_schema["columns"]
+                    if isinstance(cols_data, list):
+                        for item in cols_data:
+                            if isinstance(item, dict) and item.get("name") == col:
+                                schema = item
+                                break
+                    elif isinstance(cols_data, dict) and col in cols_data:
+                        schema = cols_data[col]
 
             if is_num:
                 kind = schema.get("kind", _detect_column_kind(series))
@@ -108,7 +120,7 @@ class DistributionPreservingEncoder:
                 }
             else:
                 # Categorical encoding
-                public_categories = schema.get("categories")
+                public_categories = schema.get("categories") or schema.get("allowed_values")
                 if public_categories:
                     unknown_level = "MISSING" if "MISSING" in public_categories else str(public_categories[-1])
                     series_sanitized = series.astype(object).where(series.isin(public_categories), unknown_level)

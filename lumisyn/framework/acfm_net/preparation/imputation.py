@@ -37,10 +37,17 @@ class AdaptiveImputer:
             # Under strict privacy mode, indicator columns come strictly from public_schema
             indicator_cols = []
             if public_schema and isinstance(public_schema, dict):
-                cols_dict = public_schema.get("columns", public_schema)
-                for c, spec in cols_dict.items():
-                    if isinstance(spec, dict) and (spec.get("nullable") or spec.get("has_indicator")):
-                        indicator_cols.append(c)
+                cols_data = public_schema.get("columns", public_schema)
+                if isinstance(cols_data, list):
+                    for item in cols_data:
+                        if isinstance(item, dict):
+                            c = item.get("name")
+                            if c and (item.get("nullable") or item.get("has_indicator")):
+                                indicator_cols.append(c)
+                elif isinstance(cols_data, dict):
+                    for c, spec in cols_data.items():
+                        if isinstance(spec, dict) and (spec.get("nullable") or spec.get("has_indicator")):
+                            indicator_cols.append(c)
                 if not indicator_cols and "indicators" in public_schema:
                     indicator_cols = list(public_schema["indicators"])
             if not indicator_cols:
@@ -53,13 +60,32 @@ class AdaptiveImputer:
                     df_imputed[f"{col}_isna"] = np.zeros(num_rows, dtype=float)
 
             for col in df.select_dtypes(include=[np.number]).columns:
-                if public_schema and col in public_schema and "min" in public_schema[col] and "max" in public_schema[col]:
-                    lo = float(public_schema[col]["min"])
-                    hi = float(public_schema[col]["max"])
+                col_spec = None
+                if public_schema and isinstance(public_schema, dict):
+                    if col in public_schema:
+                        col_spec = public_schema[col]
+                    elif "columns" in public_schema:
+                        cols_data = public_schema["columns"]
+                        if isinstance(cols_data, list):
+                            for item in cols_data:
+                                if isinstance(item, dict) and item.get("name") == col:
+                                    col_spec = item
+                                    break
+                        elif isinstance(cols_data, dict) and col in cols_data:
+                            col_spec = cols_data[col]
+
+                if col_spec and isinstance(col_spec, dict) and ("min" in col_spec or "bounds" in col_spec):
+                    if "bounds" in col_spec:
+                        lo = float(col_spec["bounds"][0])
+                        hi = float(col_spec["bounds"][1])
+                    else:
+                        lo = float(col_spec["min"])
+                        hi = float(col_spec["max"])
                     fill_val = (lo + hi) / 2.0
                 else:
                     fill_val = 0.0
-                df_imputed[col] = pd.to_numeric(df_imputed[col], errors="coerce").fillna(fill_val)
+                if df_imputed[col].isna().any():
+                    df_imputed[col] = df_imputed[col].fillna(fill_val)
             for col in [c for c in df.columns if c not in df.select_dtypes(include=[np.number]).columns]:
                 df_imputed[col] = df_imputed[col].astype(object).where(df_imputed[col].notna(), "MISSING")
             

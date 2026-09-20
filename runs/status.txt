@@ -1,1 +1,1 @@
-Stage: Step 2 (Fix and Test) | Step: Stage 3 (DCGB) | ETA: 50m
+Stage: Step 2 (Fix and Test) | Step: Generation Path Complete | ETA: 25m
