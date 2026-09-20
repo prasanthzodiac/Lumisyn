@@ -78,13 +78,14 @@ def test_certificate_contains_no_private_statistics(mock_ehr_with_phi):
     allowed_keys = {
         "protocol_id", "dataset_hash", "timestamp", "re_id_risk",
         "passed_irb", "passed_deid", "passed_consent",
-        "hipaa_safe_harbor_verified", "hipaa_compliant",
+        "direct_identifiers_removed", "hipaa_safe_harbor_verified", "hipaa_compliant",
         "gdpr_compliant", "audit_trail_handle",
         "phi_columns_removed", "hashed_columns"
     }
     cert_dict = cert.__dict__ if hasattr(cert, "__dict__") else {}
     for key in cert_dict:
         assert key in allowed_keys, f"Unexpected key in certificate: {key}"
+    assert cert.direct_identifiers_removed is True
 
     # Check that no patient clinical statistics are stored
     for val in cert_dict.values():

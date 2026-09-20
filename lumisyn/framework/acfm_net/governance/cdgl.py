@@ -9,6 +9,10 @@ import numpy as np
 
 @dataclass
 class GovernanceCertificate:
+    """
+    Stage 0 Governance Certificate.
+    Note: direct_identifiers_removed is keyword-based; not a legal determination.
+    """
     protocol_id: str
     dataset_hash: str
     timestamp: float
@@ -16,16 +20,21 @@ class GovernanceCertificate:
     passed_irb: bool
     passed_deid: bool
     passed_consent: bool
-    hipaa_safe_harbor_verified: bool
+    direct_identifiers_removed: bool
     gdpr_compliant: bool
     audit_trail_handle: str
     phi_columns_removed: List[str] = field(default_factory=list)
     hashed_columns: List[str] = field(default_factory=list)
 
     @property
+    def hipaa_safe_harbor_verified(self) -> bool:
+        """Technical keyword-based identifier drop verification; not a legal determination."""
+        return self.direct_identifiers_removed
+
+    @property
     def hipaa_compliant(self) -> bool:
-        """Deprecated alias: technical Safe Harbor de-identification verification."""
-        return self.hipaa_safe_harbor_verified
+        """Deprecated alias: technical Safe Harbor de-identification verification (keyword-based; not a legal determination)."""
+        return self.direct_identifiers_removed
 
 
 class ClinicalDataGovernanceLayer:
@@ -282,7 +291,7 @@ class ClinicalDataGovernanceLayer:
             passed_irb=irb_passed,
             passed_deid=deid_passed,
             passed_consent=consent_passed,
-            hipaa_safe_harbor_verified=hipaa_flag,
+            direct_identifiers_removed=hipaa_flag,
             gdpr_compliant=gdpr_flag,
             audit_trail_handle=audit_handle,
             phi_columns_removed=phi_dropped,

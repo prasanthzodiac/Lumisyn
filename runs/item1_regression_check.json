@@ -1,0 +1,20 @@
+{
+  "identity_pipeline_rerun": {
+    "d_enc": 78,
+    "metrics": {
+      "norm_1way_tvd": 69.41,
+      "norm_2way_tvd": 34.0367,
+      "norm_frob_corr": 12.0949,
+      "raw_1way_tvd": 0.465,
+      "floor_1way": 0.0067
+    },
+    "ref_1w": 69.26,
+    "ref_2w": 34.03,
+    "ref_corr": 12.47
+  },
+  "nonprivate_roundtrip": {
+    "d_enc": 78,
+    "recon_mse": 0.001700868713669479,
+    "logged_mse_d71": 0.001604
+  }
+}

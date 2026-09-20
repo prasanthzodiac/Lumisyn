@@ -168,3 +168,33 @@ def test_log1p_flag_controls_transformation(sample_adult_df, adult_schema):
     enc_active = DistributionPreservingEncoder(enable_schema_log1p=True)
     _, info_act = enc_active.fit_transform(sample_adult_df.copy(), privacy_schema=adult_schema)
     assert info_act["feature_specs"]["capital-gain"]["transform"] == "log1p"
+
+
+def test_enable_schema_log1p_default_false_and_recorded_in_config():
+    """Verify enable_schema_log1p defaults to False and is recorded in every run's config and checkpoint."""
+    from lumisyn.framework.acfm_net.pipeline import ACFMNetV5Pipeline
+
+    # Default encoder instance must have enable_schema_log1p == False
+    enc = DistributionPreservingEncoder()
+    assert enc.enable_schema_log1p is False
+
+    # Pipeline run must record enable_schema_log1p in released_checkpoint config and privacy contract
+    n = 105
+    df_tiny = pd.DataFrame({
+        "age": np.random.randint(20, 70, size=n),
+        "income": np.random.uniform(20000, 100000, size=n),
+    })
+    pipe = ACFMNetV5Pipeline(
+        target_epsilon=1.0,
+        target_delta=1e-5,
+        strict_release_privacy=True,
+        allow_nonprivate_debug=True,
+        batch_size=105,
+    )
+    df_syn, report = pipe.fit_generate(df_tiny, num_samples=10, epochs=1)
+
+    assert "config" in pipe.released_checkpoint
+    assert pipe.released_checkpoint["config"]["enable_schema_log1p"] is False
+    assert report["config"]["enable_schema_log1p"] is False
+    assert report["privacy_contract"]["enable_schema_log1p"] is False
+

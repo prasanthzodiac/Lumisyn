@@ -112,3 +112,55 @@ def test_stage7_violation_rate_reporting():
         (df_syn_repaired["cholesterol"] < 100) | (df_syn_repaired["cholesterol"] > 400)
     )
     assert v_syn_after == 0.0, f"Expected 0% violation after repair, got {v_syn_after}"
+
+
+def test_align_empirical_distributions_quarantined_and_unreachable():
+    """Verify align_empirical_distributions cannot be called and raises RuntimeError."""
+    from lumisyn.framework.acfm_net.repair.constraint_repair import align_empirical_distributions
+
+    df_dummy = pd.DataFrame({"a": [1.0, 2.0], "b": [3.0, 4.0]})
+    with pytest.raises(RuntimeError) as excinfo:
+        align_empirical_distributions(df_dummy, df_dummy)
+    assert "strictly forbidden" in str(excinfo.value)
+
+
+def test_constrained_gradient_repair_loop_logic():
+    """Verify ConstrainedGradientRepairLoop penalizes and repairs relational and boundary violations."""
+    import torch
+    loop = ConstrainedGradientRepairLoop(
+        max_repair_steps=20,
+        lr=0.1,
+        clinical_bounds={0: (10.0, 50.0), 1: (0.0, 100.0)},
+        relational_pairs=[(0, 1)],  # col 0 must be >= col 1 + 10.0
+    )
+
+    # Initial violating tensor: col 0 = 5.0 (below 10.0), col 1 = 20.0 (violates relational 5 >= 20+10)
+    x = torch.tensor([[5.0, 20.0], [60.0, 70.0]], dtype=torch.float32)
+    assert loop._compute_violations(x) > 0
+
+    x_rep, stats = loop.repair(x)
+    assert stats["final_violations"] <= stats["initial_violations"]
+    assert (x_rep[:, 0] >= 10.0).all() and (x_rep[:, 0] <= 50.0).all()
+
+
+def test_enforce_public_domain_constraints_kinds():
+    """Verify all column kinds (binary_int, integer, count, continuous) are properly handled."""
+    from lumisyn.framework.acfm_net.repair.constraint_repair import enforce_domain_constraints
+    specs = {
+        "bin_int": {"type": "numeric", "orig_min": 1.0, "orig_max": 5.0, "kind": "binary_int"},
+        "int_col": {"type": "numeric", "orig_min": 10.0, "orig_max": 50.0, "kind": "integer"},
+        "missing_type": {"type": "categorical"},
+    }
+    df = pd.DataFrame({
+        "bin_int": [0.5, 3.2, 8.0],
+        "int_col": [9.1, 25.4, 60.2],
+        "non_spec": ["cat", "dog", "bird"],
+    })
+    repaired = enforce_public_domain_constraints(df, specs)
+    assert (repaired["int_col"] >= 10).all() and (repaired["int_col"] <= 50).all()
+    assert (repaired["bin_int"] >= 1).all() and (repaired["bin_int"] <= 5).all()
+
+    # Also test non-private fallback safety gate
+    with pytest.raises(RuntimeError):
+        enforce_domain_constraints(df, df)
+

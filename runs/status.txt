@@ -1,1 +1,3 @@
-Stage: Complete | Step: Fix-and-test pass complete. 64/64 tests passed. Zero errors. | ETA: 0m
+stage: FIXES
+step: Item 1 regression check running (task-4867), Item 6 completed (5-repeat C2ST 0.4952 +/- 0.0283, Noise MIA 0.5132 +/- 0.0282)
+ETA: 15 minutes remaining for fixes and Tier A

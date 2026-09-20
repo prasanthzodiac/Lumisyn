@@ -376,6 +376,8 @@ class ACFMNetV5Pipeline:
             "rows_out": len(df_deidentified),
             "columns_removed": len(cert.phi_columns_removed),
             "columns_hashed": len(cert.hashed_columns),
+            "direct_identifiers_removed": cert.direct_identifiers_removed,
+            "disclaimer": "keyword-based; not a legal determination",
             "re_id_risk": None if self.strict_release_privacy else cert.re_id_risk,
             "re_id_risk_status": "not released from raw governance scan" if self.strict_release_privacy else "raw audit value",
             "audit_handle": cert.audit_trail_handle,
@@ -1189,9 +1191,12 @@ class ACFMNetV5Pipeline:
                 "flow_param_count": p_flow,
                 "noise_over_clip": noise_over_clip,
                 "strict_release_privacy": self.strict_release_privacy,
+                "enable_schema_log1p": getattr(self.encoder, "enable_schema_log1p", False),
             },
             "privacy_ledger": privacy_ledger.as_dict(),
         }
+        report["config"] = self.released_checkpoint["config"]
+        report["privacy_contract"]["enable_schema_log1p"] = getattr(self.encoder, "enable_schema_log1p", False)
         report["released_checkpoint"] = self.released_checkpoint
         report["released_checkpoint_keys"] = list(self.released_checkpoint.keys())
 
@@ -1270,25 +1275,36 @@ class ACFMNetV5Pipeline:
                     repaired_synth_scaled[:, curr_idx:curr_idx + dim] = hard
                 curr_idx += dim
 
+        # Decode back to original feature space
+        synth_np_scaled  = repaired_synth_scaled.cpu().numpy()
+        self.scaled_X_generated = synth_np_scaled
+        synth_np_encoded = self.scaler.inverse_transform(synth_np_scaled)
+        df_synthetic_pre_repair = self.encoder.decode(synth_np_encoded)
+
+        # Enforce domain constraints & physical plausibility
+        df_synthetic = (
+            enforce_public_domain_constraints(df_synthetic_pre_repair, self.encoder.feature_specs)
+            if self.strict_release_privacy
+            else enforce_domain_constraints(df_synthetic_pre_repair, df_deidentified)
+        )
+
+        # Compute per-column fraction of cells changed by repair (Item 4)
+        per_col_repair_fraction = {}
+        for col in df_synthetic.columns:
+            if col in df_synthetic_pre_repair.columns:
+                changed = (df_synthetic[col] != df_synthetic_pre_repair[col])
+                per_col_repair_fraction[col] = round(float(changed.mean()), 6)
+            else:
+                per_col_repair_fraction[col] = 0.0
+
+        final_repair_stats["per_column_fraction_changed"] = per_col_repair_fraction
         report["repair_stats"] = final_repair_stats
         report["stages_completed"].append("Stage 7: Constrained Repair Pass Completed")
         _record_stage(report, "7", "Constrained gradient repair", "PASSED", {
             "rows_repaired": int(len(repaired_synth_scaled)),
             "repair_stats": final_repair_stats,
+            "per_column_fraction_changed": per_col_repair_fraction,
         })
-
-        # Decode back to original feature space
-        synth_np_scaled  = repaired_synth_scaled.cpu().numpy()
-        self.scaled_X_generated = synth_np_scaled
-        synth_np_encoded = self.scaler.inverse_transform(synth_np_scaled)
-        df_synthetic     = self.encoder.decode(synth_np_encoded)
-
-        # Enforce domain constraints & physical plausibility
-        df_synthetic = (
-            enforce_public_domain_constraints(df_synthetic, self.encoder.feature_specs)
-            if self.strict_release_privacy
-            else enforce_domain_constraints(df_synthetic, df_deidentified)
-        )
 
         # Project synthetic DataFrame back to original schema columns
         orig_cols = [c for c in df_deidentified.columns if c in df_synthetic.columns]
