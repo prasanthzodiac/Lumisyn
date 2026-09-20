@@ -1,0 +1,104 @@
+================================================================================
+[Gate 4d Experiment Suite] Started at 2026-09-20T19:19:05.985603
+Dataset: Adult 30k | Strict Release DP | Seeds: [42, 43, 44]
+================================================================================
+
+Adult 30k loaded: Train=(30000, 15), Holdout=(18842, 15)
+
+===========================================================================
+=== PART 0: CORRECTED FLOOR BASELINES & TRUE TRTR EVALUATION ===
+===========================================================================
+
+Computing Real-vs-Real Floor (Train 30k vs Holdout 18.8k)...
+Real-vs-Real Floor: 1-way TVD=0.0067 | 2-way TVD=0.0218 | Frob Corr=0.0449 | Standardized SWD=0.5717 | Mean 1D W1=0.4765 std | C2ST AUC=0.5000 | TRTR Baseline AUROC=0.9076 | TRTR AUPRC=0.7883
+
+Evaluating Constant Mean Generator Baseline...
+Constant Mean: 1-way TVD=0.4468 (Norm=66.69x) | 2-way TVD=0.9851 (Norm=45.19x) | Frob Corr=2.4799 (Norm=55.23x) | Standardized SWD=2.0629 | Mean 1D W1=1.6552 std | C2ST AUC=0.5000 | TSTR AUROC=0.5000
+
+Evaluating Independent Marginals DP Generator at eps=1.0 (3 seeds)...
+  Seed 42 (eps=1.0): 1wTVD=0.0085 (1.26x) | 2wTVD=0.2013 (9.23x) | Corr=0.3959 (8.82x) | SWD=0.2638 | 1D W1=0.1840 std | TSTR AUC=0.5762
+  Seed 43 (eps=1.0): 1wTVD=0.0106 (1.58x) | 2wTVD=0.2749 (12.61x) | Corr=0.3932 (8.76x) | SWD=0.2942 | 1D W1=0.2026 std | TSTR AUC=0.4792
+  Seed 44 (eps=1.0): 1wTVD=0.0094 (1.41x) | 2wTVD=0.2516 (11.54x) | Corr=0.3797 (8.46x) | SWD=0.3622 | 1D W1=0.2472 std | TSTR AUC=0.4438
+
+Evaluating Independent Marginals DP Generator at eps=4.0 (3 seeds)...
+  Seed 42 (eps=4.0): 1wTVD=0.0047 (0.70x) | 2wTVD=0.1988 (9.12x) | Corr=0.3931 (8.76x) | SWD=0.1294 | 1D W1=0.0993 std | TSTR AUC=0.5159
+  Seed 43 (eps=4.0): 1wTVD=0.0056 (0.83x) | 2wTVD=0.2727 (12.51x) | Corr=0.3926 (8.74x) | SWD=0.1298 | 1D W1=0.0897 std | TSTR AUC=0.4331
+  Seed 44 (eps=4.0): 1wTVD=0.0054 (0.80x) | 2wTVD=0.1997 (9.16x) | Corr=0.3796 (8.45x) | SWD=0.1410 | 1D W1=0.1110 std | TSTR AUC=0.5052
+
+===========================================================================
+=== PART A7: DP GAUSSIAN-COPULA BASELINE (eps=1.0, 3 seeds) ===
+===========================================================================
+
+  Seed 42 (eps=1.0): 1wTVD=0.0193 (2.88x) | 2wTVD=0.2907 (13.33x) | Corr=0.2292 (5.10x) | SWD=0.4372 | 1D W1=0.3422 std | TSTR AUC=0.7423
+  Seed 43 (eps=1.0): 1wTVD=0.0184 (2.75x) | 2wTVD=0.2566 (11.77x) | Corr=0.2451 (5.46x) | SWD=0.2904 | 1D W1=0.2327 std | TSTR AUC=0.6809
+  Seed 44 (eps=1.0): 1wTVD=0.0197 (2.94x) | 2wTVD=0.2929 (13.44x) | Corr=0.2420 (5.39x) | SWD=0.4796 | 1D W1=0.3201 std | TSTR AUC=0.7977
+
+===========================================================================
+=== PART A1: IDENTITY-MODE IN-DEPTH DIAGNOSTICS ===
+===========================================================================
+
+1. Top 10 Worst Columns by 1-Way TVD (Identity Mode):
+    1. hours-per-week       | TVD = 0.9449
+    2. education-num        | TVD = 0.9426
+    3. native-country       | TVD = 0.8931
+    4. fnlwgt               | TVD = 0.8880
+    5. capital-loss         | TVD = 0.8577
+    6. age                  | TVD = 0.5511
+    7. education            | TVD = 0.5040
+    8. race                 | TVD = 0.4480
+    9. workclass            | TVD = 0.4172
+   10. marital-status       | TVD = 0.3632
+
+2. Pre-Clamp Out-of-Bounds Fraction (outside [-1, 1]): 21.6398%
+
+3. Generated vs Real Scaled-Space Statistics (Mean and Std across 78 dimensions):
+   Real Scaled Mean (avg across dims): 0.0884 | Std: 0.2183
+   Syn  Scaled Mean (avg across dims): 0.0917 | Std: 0.3241
+   Mean Absolute Mean Error:         0.0812
+   Mean Absolute Std Error:          0.1340
+
+4. Top-1 Probability Margin (p_(1) - p_(2)) for Categorical Blocks:
+   workclass            | Top-1 Margin = 0.4964
+   education            | Top-1 Margin = 0.3782
+   marital-status       | Top-1 Margin = 0.4854
+   occupation           | Top-1 Margin = 0.3832
+   relationship         | Top-1 Margin = 0.5054
+   race                 | Top-1 Margin = 0.6005
+   sex                  | Top-1 Margin = 0.8031
+   class                | Top-1 Margin = 0.8391
+   Mean Categorical Margin across blocks: 0.5614
+
+5. Flow Loss vs Zero-Predictor Baseline:
+   Empirical Zero-Predictor Baseline (E[||x1 - x0||^2] on X_scaled): 1.1675
+   Standardized Theoretical N(0,I) Reference Loss:                  2.0000
+   Final Trained Flow Loss:                                         0.7557
+   Loss Improvement over Zero-Predictor:                           0.4118 nats
+
+===========================================================================
+=== PART A3: LEARNING-RATE AND CLIPPING SWEEP (Identity Mode, B=512, E=10) ===
+===========================================================================
+
+Empirical Median Gradient Norm C_med = 3.0822
+Clipping thresholds C in [1.5411, 3.0822, 6.1643, 12.3286] (corresponding to [0.5, 1.0, 2.0, 4.0] x C_med)
+
+--- Testing Config: Opt=ADAM, lr=0.0005, C=1.5411 (0.5x) (3 seeds) ---
+  Result: Clipped Frac=100.00% | Mean Grad Norm=3.1887 | Norm 1wTVD=80.75x | Norm 2wTVD=36.71x | Norm Corr=8.85x | TSTR AUC=0.6094
+
+--- Testing Config: Opt=ADAM, lr=0.0005, C=3.0822 (1.0x) (3 seeds) ---
+  Result: Clipped Frac=55.65% | Mean Grad Norm=3.1794 | Norm 1wTVD=80.99x | Norm 2wTVD=36.76x | Norm Corr=8.84x | TSTR AUC=0.6920
+
+--- Testing Config: Opt=ADAM, lr=0.0005, C=6.1643 (2.0x) (3 seeds) ---
+  Result: Clipped Frac=0.00% | Mean Grad Norm=3.1015 | Norm 1wTVD=83.53x | Norm 2wTVD=37.30x | Norm Corr=8.74x | TSTR AUC=0.5391
+
+--- Testing Config: Opt=ADAM, lr=0.0005, C=12.3286 (4.0x) (3 seeds) ---
+  Result: Clipped Frac=0.00% | Mean Grad Norm=3.1122 | Norm 1wTVD=85.05x | Norm 2wTVD=37.61x | Norm Corr=8.73x | TSTR AUC=0.5075
+
+--- Testing Config: Opt=ADAM, lr=0.002, C=1.5411 (0.5x) (3 seeds) ---
+  Result: Clipped Frac=100.00% | Mean Grad Norm=3.4946 | Norm 1wTVD=68.88x | Norm 2wTVD=33.95x | Norm Corr=12.46x | TSTR AUC=0.7008
+
+--- Testing Config: Opt=ADAM, lr=0.002, C=3.0822 (1.0x) (3 seeds) ---
+  Result: Clipped Frac=70.28% | Mean Grad Norm=3.4949 | Norm 1wTVD=69.26x | Norm 2wTVD=34.03x | Norm Corr=12.47x | TSTR AUC=0.7204
+
+
+--- Testing Config: Opt=ADAM, lr=0.002, C=6.1643 (2.0x) (3 seeds) ---
+  Result: Clipped Frac=0.04% | Mean Grad Norm=3.4861 | Norm 1wTVD=76.50x | Norm 2wTVD=35.73x | Norm Corr=11.32x | TSTR AUC=0.6712

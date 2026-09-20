@@ -1,0 +1,57 @@
+================================================================================
+ GATE 1b REALISTIC BENCHMARK RUN: N >= 5,000, q <= 0.05
+ Timestamp: 2026-09-20 05:25:18 UTC
+ Git Hash:  
+ Seed:      2026
+================================================================================
+
+[Data Prep] Synthesizing realistic cohort with N=5000 unique patients (1 row per patient)...
+[Data Prep] Patient uniqueness verified: 5000 unique IDs out of 5000 rows.
+[Data Prep] Mortality rate: 0.0474 (237/5000)
+
+[Config] Setting N=5000, batch_size=250 => expected subsampling rate q=0.0500 <= 0.05
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Config] Stage 4 Representation Epochs: 5 | Stage 8 Flow Epochs: 4
+
+--- BEGIN PIPELINE EXECUTION ---
+[Stage 0] Dataset shape entering pipeline: (5000, 10)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([5000, 15])
+[Stage 3] DCGB complete. Graph: 15 nodes, 38 edges.
+  [Stage 4 HVAE] Epoch  1/5 | Loss=2595.5085 | Accumulated DP eps=0.2967
+  [Stage 4 HVAE] Epoch  2/5 | Loss=18.5324 | Accumulated DP eps=0.4127
+  [Stage 4 HVAE] Epoch  3/5 | Loss=6.4694 | Accumulated DP eps=0.5037
+  [Stage 4 HVAE] Epoch  4/5 | Loss=8.5045 | Accumulated DP eps=0.5816
+  [Stage 4 HVAE] Epoch  5/5 | Loss=3567.7895 | Accumulated DP eps=0.6509
+[Stage 4] HCARLN complete. Latent Z shape: torch.Size([5000, 64])
+=== STAGE 8: Latent Flow Training (I-CFM) -- 4 epochs, batch=250, device=cuda ===
+  [Stage 8 Flow] Epoch   1/4 | Flow Loss=2.5159 | Accumulated DP eps=0.7143
+  [Stage 8 Flow] Epoch   2/4 | Flow Loss=2.3513 | Accumulated DP eps=0.7730
+  [Stage 8 Flow] Epoch   3/4 | Flow Loss=2.3271 | Accumulated DP eps=0.8280
+  [Stage 8 Flow] Epoch   4/4 | Flow Loss=2.3228 | Accumulated DP eps=0.8800
+[Inference] Generating 500 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (500, 10)
+--- END PIPELINE EXECUTION ---
+
+================================================================================
+ GATE 1b REALISTIC RUN RESULTS & PRIVACY ACCOUNTING SUMMARY
+================================================================================
+ Cohort Size N:               5000
+ Expected Batch Size:         250
+ Subsampling Rate q:          0.050000 (q <= 0.05: True)
+ Noise Multiplier sigma:      3.081800
+ Max Gradient Norm C:         1.25
+ Stage 4 (HVAE) Steps:        100
+ Stage 8 (Flow) Steps:        80
+ Total DP Steps:              180
+ Training Delta:              8.00e-06
+--------------------------------------------------------------------------------
+ Training DP-SGD Epsilon:     0.880000
+ Formal Guarantee (RDP eps):  0.957232
+ Opacus PRV Upper Bound eps:  0.880000
+ Laplace Meta Charges eps:    0.120000
+ Total Composed Epsilon:      1.000000 <= Target 1.0000
+ Verification Status:         VERIFIED_CONDITIONAL_PUBLIC_SCHEMA
+ Total Elapsed Time:          212.06s
+================================================================================
+

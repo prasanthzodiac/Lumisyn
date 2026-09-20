@@ -1,0 +1,43 @@
+======================================================================
+LUMISYN BASELINE TEST SUITE EXECUTION LOG
+======================================================================
+Timestamp: 2026-09-19 18:51:13
+Device: NVIDIA GeForce RTX 4060 Ti
+PyTorch Version: 2.6.0+cu124
+Command: C:\Users\sarat\AppData\Local\Programs\Python\Python312\python.exe -m pytest -v lumisyn/backend/tests
+PYTHONPATH: C:\Users\sarat\Documents\Research\lumisyn\framework;C:\Users\sarat\Documents\Research\lumisyn;
+Return Code: 0
+Elapsed Time: 17.07 seconds
+Initial Peak VRAM: 0.00 MB
+======================================================================
+RAW PYTEST STDOUT:
+======================================================================
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\sarat\AppData\Local\Programs\Python\Python312\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\sarat\Documents\Research
+plugins: anyio-4.14.2, Faker-40.36.0
+collecting ... collected 8 items
+
+lumisyn/backend/tests/test_adpe.py::test_invertible_encoding_decoding PASSED [ 12%]
+lumisyn/backend/tests/test_apc.py::test_dp_budget_allocation_bound PASSED [ 25%]
+lumisyn/backend/tests/test_apc.py::test_prv_accountant PASSED            [ 37%]
+lumisyn/backend/tests/test_api_contract.py::test_lumisyn_health_and_upload_contract PASSED [ 50%]
+lumisyn/backend/tests/test_cdgl.py::test_cdgl_pass PASSED                [ 62%]
+lumisyn/backend/tests/test_cdgl.py::test_cdgl_fail_direct_phi PASSED     [ 75%]
+lumisyn/backend/tests/test_pipeline.py::test_full_pipeline_mock_ehr PASSED [ 87%]
+lumisyn/backend/tests/test_udie.py::test_udie_components PASSED          [100%]
+
+============================== warnings summary ===============================
+..\..\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\testclient.py:1
+  C:\Users\sarat\AppData\Local\Programs\Python\Python312\Lib\site-packages\fastapi\testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 8 passed, 1 warning in 15.93s ========================
+
+======================================================================
+RAW PYTEST STDERR:
+======================================================================
+
+======================================================================

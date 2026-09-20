@@ -1,0 +1,266 @@
+﻿================================================================================
+ GATE 3b COMPREHENSIVE DIAGNOSTICS & FIXES BENCHMARK (STOP AT GATE 4)
+ Timestamp: 2026-09-20 07:21:31 UTC
+ Git Hash:  unknown
+ Seed:      2026
+================================================================================
+
+[Data Prep] Loaded real public tabular dataset: lumisyn/data/kaggle_datasets/pima_diabetes.csv
+[Data Prep] Total rows: 768, Columns: ['Pregnancies', 'Glucose', 'BloodPressure', 'SkinThickness', 'Insulin', 'BMI', 'DiabetesPedigreeFunction', 'Age', 'Outcome']
+[Data Prep] Patient uniqueness: 1 row per patient record verified.
+[Splits] Train: 384 rows | Disjoint Test: 192 rows | MIA Holdout Negatives: 192 rows
+
+================================================================================
+ GATE 3b ITEM 2: CLIPPING NORM C SWEEP (0.1, 0.25, 0.5, 1.25) FOR BOTH STAGES
+================================================================================
+ Running Sweep on N=384 rows, d_in=9, batch_size=96, q=0.2500...
+
+--- STAGE 4 (HVAE) CLIPPING NORM SWEEP ---
+  C = 0.10 | Clipped Fraction: 100.00% | Median Grad Norm: 0.4161 | Final Loss: 0.0478
+  C = 0.25 | Clipped Fraction: 98.70% | Median Grad Norm: 0.4150 | Final Loss: 0.0515
+  C = 0.50 | Clipped Fraction: 17.88% | Median Grad Norm: 0.4214 | Final Loss: 0.0549
+  C = 1.25 | Clipped Fraction:  0.00% | Median Grad Norm: 0.4418 | Final Loss: 0.0703
+
+--- STAGE 8 (FLOW) CLIPPING NORM SWEEP ---
+  C = 0.10 | Clipped Fraction: 100.00% | Median Grad Norm: 5.5700 | Final Loss: 2.0665
+  C = 0.25 | Clipped Fraction: 100.00% | Median Grad Norm: 5.5554 | Final Loss: 2.0344
+  C = 0.50 | Clipped Fraction: 100.00% | Median Grad Norm: 5.5641 | Final Loss: 2.0367
+  C = 1.25 | Clipped Fraction: 100.00% | Median Grad Norm: 5.5557 | Final Loss: 1.9822
+
+ Recommended C near median gradient norm:
+  Stage 4 (HVAE): Median norm ~ 0.4214 => Selected C = 0.5
+  Stage 8 (Flow): Median norm ~ 5.5641 => Selected C = 1.25
+================================================================================
+
+
+================================================================================
+ GATE 3b ITEM 7: DEPENDENCY GRAPH ADD/REMOVE SENSITIVITY & ABLATION
+================================================================================
+ Mathematical Sensitivity Derivation Analysis:
+ -------------------------------------------------------------------------------
+ 1. Under ADD/REMOVE adjacency, dataset sizes differ: |D| = N, |D'| = N +/- 1.
+ 2. The dependency matrix R uses composite statistics (Pearson + Spearman rank
+    correlation, mutual information, ANOVA F-ratios, and random downsampling).
+ 3. For Spearman rank correlation, inserting 1 record shifts the ranks of up to
+    N existing records by +/- 1, making worst-case sensitivity data-dependent.
+ 4. Mutual information and ANOVA F-ratios have unbounded sensitivity without
+    data-dependent smooth sensitivity or heuristic clipping.
+ 5. Per Gate 3b Item 7: As exact add/remove sensitivity cannot be derived formally
+    for this composite estimator, we replace the noised graph with the public-only
+    ontology graph and move the freed 0.08 epsilon entirely to DP-SGD training.
+ -------------------------------------------------------------------------------
+
+Running Ablation Run 1: Public-Only Graph (eps_sgd = 1.0000, Laplace meta = 0.0000)...
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (384, 9)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([384, 9])
+[Stage 3] DCGB complete. Graph: 9 nodes, 3 edges.
+[Stage 4 HVAE Baseline] Loss Definition: mean MSE over 9 dimensions (per-sample mean, then batch mean)
+[Stage 4 HVAE Baseline] Zero-predictor recon loss: 0.1130 | Mean-predictor recon loss: 0.0116
+  [Stage 4 HVAE] Epoch  1/5 | Loss=0.0341 (Recon=0.0330, KL=0.0057) | Clipped Frac=0.00% | Grad Norm (mean/max)=0.3836/0.7073 | Accumulated DP eps=0.3536
+  [Stage 4 HVAE] Epoch  2/5 | Loss=0.0276 (Recon=0.0253, KL=0.0058) | Clipped Frac=0.00% | Grad Norm (mean/max)=0.3439/0.6347 | Accumulated DP eps=0.4947
+  [Stage 4 HVAE] Epoch  3/5 | Loss=0.0235 (Recon=0.0200, KL=0.0059) | Clipped Frac=0.00% | Grad Norm (mean/max)=0.3106/0.5157 | Accumulated DP eps=0.6053
+  [Stage 4 HVAE] Epoch  4/5 | Loss=0.0203 (Recon=0.0155, KL=0.0060) | Clipped Frac=0.00% | Grad Norm (mean/max)=0.2734/0.5491 | Accumulated DP eps=0.7000
+  [Stage 4 HVAE] Epoch  5/5 | Loss=0.0184 (Recon=0.0124, KL=0.0060) | Clipped Frac=0.00% | Grad Norm (mean/max)=0.2482/0.4463 | Accumulated DP eps=0.7844
+[Stage 4] HCARLN complete. Latent Z shape: torch.Size([384, 64])
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Latent Flow Training (I-CFM) -- 3 epochs, batch=96, device=cuda ===
+  [Stage 8 Flow] Epoch   1/3 | Flow Loss=2.0254 | Clipped Frac=100.00% | Grad Norm (mean/max)=7.9132/11.1362 | Accumulated DP eps=0.8615
+  [Stage 8 Flow] Epoch   2/3 | Flow Loss=1.9919 | Clipped Frac=100.00% | Grad Norm (mean/max)=7.8924/9.9855 | Accumulated DP eps=0.9330
+  [Stage 8 Flow] Epoch   3/3 | Flow Loss=1.9844 | Clipped Frac=100.00% | Grad Norm (mean/max)=7.9040/10.6958 | Accumulated DP eps=1.0000
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 12 | Final EMA decay: 0.59091
+  L2 distance of released (EMA) weights from init: 2.145170
+  L2 distance of live weights from init:           2.189354
+  Flow loss comparison: Live model = 1.9514 vs EMA model = 2.0069
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 1.000000 (Target: 1.0000)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 1.087897
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         1.000000
+  DP-SGD RDP       (without Laplace):         1.087897
+  Laplace Non-Training Charges (Ledger):      0.000000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.9844 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 384 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (384, 9)
+
+Running Ablation Run 2: Noised Graph (eps_sgd = 0.9200, Laplace meta = 0.0800)...
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (384, 9)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([384, 9])
+[Stage 3] DCGB complete. Graph: 9 nodes, 20 edges.
+[Stage 4 HVAE Baseline] Loss Definition: mean MSE over 9 dimensions (per-sample mean, then batch mean)
+[Stage 4 HVAE Baseline] Zero-predictor recon loss: 0.1130 | Mean-predictor recon loss: 0.0116
+  [Stage 4 HVAE] Epoch  1/5 | Loss=0.0255 (Recon=0.0244, KL=0.0053) | Clipped Frac=0.00% | Grad Norm (mean/max)=0.3228/0.5323 | Accumulated DP eps=0.3243
+  [Stage 4 HVAE] Epoch  2/5 | Loss=0.0225 (Recon=0.0203, KL=0.0054) | Clipped Frac=0.00% | Grad Norm (mean/max)=0.3019/0.6175 | Accumulated DP eps=0.4543
+  [Stage 4 HVAE] Epoch  3/5 | Loss=0.0202 (Recon=0.0169, KL=0.0055) | Clipped Frac=0.00% | Grad Norm (mean/max)=0.2781/0.5822 | Accumulated DP eps=0.5563
+  [Stage 4 HVAE] Epoch  4/5 | Loss=0.0181 (Recon=0.0138, KL=0.0053) | Clipped Frac=0.00% | Grad Norm (mean/max)=0.2542/0.4840 | Accumulated DP eps=0.6436
+  [Stage 4 HVAE] Epoch  5/5 | Loss=0.0168 (Recon=0.0114, KL=0.0054) | Clipped Frac=0.00% | Grad Norm (mean/max)=0.2339/0.4609 | Accumulated DP eps=0.7214
+[Stage 4] HCARLN complete. Latent Z shape: torch.Size([384, 64])
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Latent Flow Training (I-CFM) -- 3 epochs, batch=96, device=cuda ===
+  [Stage 8 Flow] Epoch   1/3 | Flow Loss=1.9980 | Clipped Frac=100.00% | Grad Norm (mean/max)=7.7580/9.9347 | Accumulated DP eps=0.7924
+  [Stage 8 Flow] Epoch   2/3 | Flow Loss=1.9991 | Clipped Frac=100.00% | Grad Norm (mean/max)=7.7982/10.0247 | Accumulated DP eps=0.8583
+  [Stage 8 Flow] Epoch   3/3 | Flow Loss=2.0234 | Clipped Frac=100.00% | Grad Norm (mean/max)=7.8613/10.3133 | Accumulated DP eps=0.9200
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 12 | Final EMA decay: 0.59091
+  L2 distance of released (EMA) weights from init: 2.143900
+  L2 distance of live weights from init:           2.188084
+  Flow loss comparison: Live model = 2.0249 vs EMA model = 2.0010
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 1.000000 (Target: 1.0000)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 1.080404
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.920000
+  DP-SGD RDP       (without Laplace):         1.000404
+  Laplace Non-Training Charges (Ledger):      0.080000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 2.0234 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 384 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (384, 9)
+
+--- GRAPH ABLATION RESULTS COMPARISON ---
+ Metric                           | Public-Only Graph   | Noised Empirical Graph
+ ---------------------------------+---------------------+-----------------------
+ DP-SGD Training Epsilon (PRV)    | 1.000000            | 0.920000
+ Laplace Meta-Charges (Ledger)    | 0.000000            | 0.080000
+ Total Composed Epsilon (Headline)| 1.000000            | 1.000000
+ TSTR AUROC                       | 0.3393              | 0.6025
+ TSTR AUPRC                       | 0.3393              | 0.6025
+ C2ST Indistinguishability AUC    | 1.0000              | 1.0000
+================================================================================
+
+
+================================================================================
+ TRAINING MAIN PIPELINE WITH OPTIMAL C, ZERO-INIT VELOCITY, & STEP-TIED EMA
+================================================================================
+ Setting N=384, batch_size=96 => expected subsampling rate q=0.2500 <= 0.05
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (384, 9)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([384, 9])
+[Stage 3] DCGB complete. Graph: 9 nodes, 3 edges.
+[Stage 4 HVAE Baseline] Loss Definition: mean MSE over 9 dimensions (per-sample mean, then batch mean)
+[Stage 4 HVAE Baseline] Zero-predictor recon loss: 0.1130 | Mean-predictor recon loss: 0.0116
+  [Stage 4 HVAE] Epoch  1/5 | Loss=0.0328 (Recon=0.0316, KL=0.0059) | Clipped Frac=24.23% | Grad Norm (mean/max)=0.4358/0.7620 | Accumulated DP eps=0.3318
+  [Stage 4 HVAE] Epoch  2/5 | Loss=0.0154 (Recon=0.0130, KL=0.0059) | Clipped Frac=0.29% | Grad Norm (mean/max)=0.2777/0.5117 | Accumulated DP eps=0.4646
+  [Stage 4 HVAE] Epoch  3/5 | Loss=0.0102 (Recon=0.0066, KL=0.0060) | Clipped Frac=0.00% | Grad Norm (mean/max)=0.1989/0.3949 | Accumulated DP eps=0.5688
+  [Stage 4 HVAE] Epoch  4/5 | Loss=0.0099 (Recon=0.0051, KL=0.0060) | Clipped Frac=0.00% | Grad Norm (mean/max)=0.1765/0.3713 | Accumulated DP eps=0.6580
+  [Stage 4 HVAE] Epoch  5/5 | Loss=0.0114 (Recon=0.0054, KL=0.0060) | Clipped Frac=0.00% | Grad Norm (mean/max)=0.1824/0.3852 | Accumulated DP eps=0.7374
+[Stage 4] HCARLN complete. Latent Z shape: torch.Size([384, 64])
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Latent Flow Training (I-CFM) -- 4 epochs, batch=96, device=cuda ===
+  [Stage 8 Flow] Epoch   1/4 | Flow Loss=2.0094 | Clipped Frac=100.00% | Grad Norm (mean/max)=7.9111/10.2258 | Accumulated DP eps=0.8100
+  [Stage 8 Flow] Epoch   2/4 | Flow Loss=1.9911 | Clipped Frac=100.00% | Grad Norm (mean/max)=7.8975/10.0505 | Accumulated DP eps=0.8773
+  [Stage 8 Flow] Epoch   3/4 | Flow Loss=2.0176 | Clipped Frac=100.00% | Grad Norm (mean/max)=7.9806/10.6174 | Accumulated DP eps=0.9404
+  [Stage 8 Flow] Epoch   4/4 | Flow Loss=1.9930 | Clipped Frac=100.00% | Grad Norm (mean/max)=7.9207/10.2175 | Accumulated DP eps=1.0000
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 16 | Final EMA decay: 0.65385
+  L2 distance of released (EMA) weights from init: 2.409795
+  L2 distance of live weights from init:           2.441077
+  Flow loss comparison: Live model = 2.0123 vs EMA model = 1.9763
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 1.000000 (Target: 1.0000)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 1.087147
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         1.000000
+  DP-SGD RDP       (without Laplace):         1.087147
+  Laplace Non-Training Charges (Ledger):      0.000000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.9930 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 384 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (384, 9)
+
+====================== CHECKPOINT-AUDIT VERIFICATION ======================
+ Total items audited:            84
+ Total DP-SGD trained weights:   582,724 parameters
+ Total Ledger-charged elements:  81 elements
+ Total Public entries/constants: 30
+ Unbudgeted private violations:  0
+ Checkpoint Audit Status:        PASSED
+============================================================================
+
+
+================================================================================
+ GATE 3b ITEM 3: HVAE LATENT-DEPENDENCE TEST & KL FORMULATION
+================================================================================
+ KL Mathematical Definition: KL(q(z|x) || N(0, I)) = -0.5 * sum_{j=1}^{d_z} (1 + log(sigma_j^2) - mu_j^2 - sigma_j^2)
+ Latent joint dimension d_z:    64
+ Mean KL per latent dimension:  0.005980 nats
+ Total KL per sample:           0.3827 nats per sample
+
+ Reconstruction MSE Comparison:
+  (a) Posterior z ~ q(z|x):       MSE = 0.105635
+  (b) Shuffled z across samples:  MSE = 0.105858  (Ratio to posterior: 1.00x)
+  (c) Standard Prior z ~ N(0, I): MSE = 0.106909  (Ratio to posterior: 1.01x)
+ Status: FAILED (Decoder ignores z)
+================================================================================
+
+
+================================================================================
+ PHASE 3 EVALUATION HARNESS EXECUTION
+================================================================================
+ [Splits] Train: 384 rows | Holdout: 192 rows | Test: 192 rows | Syn: 384 rows
+
+--- 1. Evaluating Fidelity Modules (Real-vs-Syn and Real-vs-Real References) ---
+  [1-Way Marginal Error] Real-vs-Syn TVD:  0.7135 across 9 features
+  [1-Way Marginal Error] Real-vs-Real Ref: 0.1018 (Train vs Holdout)
+  [2-Way Marginal Error] Real-vs-Syn TVD:  0.8907 across 36 feature pairs
+  [2-Way Marginal Error] Real-vs-Real Ref: 0.5219 (Train vs Holdout)
+  [Correlation Error] Real-vs-Syn:  Pearson Frob=2.4918 | Off-diag MAE=0.2500
+  [Correlation Error] Real-vs-Real: Pearson Frob=0.7381 | Off-diag MAE=0.0651
+  [Rank Corr Error]   Real-vs-Syn:  Spearman Frob=2.6825 | Off-diag MAE=0.2600
+  [Rank Corr Error]   Real-vs-Real: Spearman Frob=0.8373 | Off-diag MAE=0.0775
+  [C2ST Indistinguishability] Real-vs-Syn:  AUC=1.0000 (95% CI [1.0, 1.0]) | SE=0.0000
+  [C2ST Indistinguishability] Real-vs-Real: AUC=0.5036 (95% CI [0.4451, 0.562]) | SE=0.0298 (should be ~0.50)
+  [TSTR Utility] AUROC: 0.5305 (TRTR baseline: 0.7571) | Utility Ratio: 0.7007
+  [TSTR Utility] AUPRC: 0.5305 (TRTR baseline: 0.7571) | Utility Ratio: 0.7007
+  [TSTR Utility] F1 (weighted): 0.5305 (TRTR baseline: 0.7571) | Utility Ratio: 0.7007
+  [Clinical Constraints] Real-vs-Syn:  Pass Rate=0.00% | Violation Rate=100.00% (384/384 records)
+  [Clinical Constraints] Real Holdout: Pass Rate=92.71% | Violation Rate=7.29% (14/192 records)
+  [Clinical Constraints Failure Diagnosis - Syn]:
+    - range_Pregnancies_[0.0,20.0]: 362 violations (94.27%)
+    - range_Glucose_[40.0,300.0]: 384 violations (100.00%)
+    - range_BloodPressure_[30.0,150.0]: 120 violations (31.25%)
+    - range_SkinThickness_[0.0,100.0]: 173 violations (45.05%)
+    - range_Insulin_[0.0,900.0]: 37 violations (9.64%)
+    - range_DiabetesPedigreeFunction_[0.05,3.0]: 383 violations (99.74%)
+  [Clinical Constraints Failure Diagnosis - Real Holdout]:
+    - range_Glucose_[40.0,300.0]: 4 violations (2.08%)
+    - range_BloodPressure_[30.0,150.0]: 10 violations (5.21%)
+    - range_BMI_[12.0,70.0]: 2 violations (1.04%)
+
+--- 2. Evaluating Privacy Modules (Disjoint Holdout Set) ---
+  [TAPAS Closest-Distance MIA] AUC: 0.4771 (95% CI [0.4227, 0.5254]) | SE: 0.0269
+  [TAPAS Shadow-Model MIA] AUC: 0.5067 (95% CI [0.4648, 0.5508]) | SE: 0.0245
+  [DOMIAS Density-Ratio MIA] AUC: 0.4704 (95% CI [0.4197, 0.5201]) | SE: 0.0251
+  [DCR Distributions] Space: Standardized [-1, 1] scaled feature space (dimensionless normalized distance in [-1, 1]^d)
+  [DCR Train Percentiles]   p5=104.2482, p25=418.2929, median=755.0921, p75=1057.2833, p95=1455.4596
+  [DCR Holdout Percentiles] p5=104.3011, p25=418.2919, median=755.0919, p75=1057.2774, p95=1455.4601
+  [DCR Median Ratio (Train / Holdout)] 1.0000
+  [DCR Interpretation]: Equalized DCR (20 repeats, N_ref=192): Median ratio (train/holdout) = 1.0000 +/- 0.0000. no evidence of selective memorization; low power because synthetic data is far from real data (C2ST = 1.0).
+
+[Phase 3 Complete] Total evaluation runtime: 3.655s
+================================================================================
+
+================================================================================
+ GATE 3b DIAGNOSTICS & FIXES COMPLETED SUCCESSFULLY IN 69.34s
+================================================================================

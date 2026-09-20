@@ -1,0 +1,77 @@
+============================= test session starts =============================
+platform win32 -- Python 3.12.10, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\sarat\AppData\Local\Programs\Python\Python312\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\sarat\Documents\Research
+plugins: anyio-4.14.2, Faker-40.36.0
+collecting ... collected 10 items
+
+lumisyn/backend/tests/test_phase1_privacy.py::test_accountant_rdp_reproduction 
+[Test 4c(i) Report] Exact RDP epsilon: 1.45136809
+[Test 4c(i) Report] Exact PRV epsilon: 1.07819611
+PASSED
+lumisyn/backend/tests/test_phase1_privacy.py::test_short_training_target_epsilon_and_crosscheck [ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (200, 4)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([200, 6])
+[Stage 3] DCGB complete. Graph: 6 nodes, 3 edges.
+  [Stage 4 HVAE] Epoch  1/5 | Loss=0.0438 | Accumulated DP eps=0.3116
+  [Stage 4 HVAE] Epoch  2/5 | Loss=0.0447 | Accumulated DP eps=0.4496
+  [Stage 4 HVAE] Epoch  3/5 | Loss=0.0454 | Accumulated DP eps=0.5581
+  [Stage 4 HVAE] Epoch  4/5 | Loss=0.0467 | Accumulated DP eps=0.6510
+  [Stage 4 HVAE] Epoch  5/5 | Loss=0.0462 | Accumulated DP eps=0.7340
+[Stage 4] HCARLN complete. Latent Z shape: torch.Size([200, 64])
+=== STAGE 8: Latent Flow Training (I-CFM) -- 2 epochs, batch=200, device=cuda ===
+  [Stage 8 Flow] Epoch   1/2 | Flow Loss=2.7400 | Accumulated DP eps=0.8097
+  [Stage 8 Flow] Epoch   2/2 | Flow Loss=2.6980 | Accumulated DP eps=0.8800
+[Inference] Generating 40 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (40, 4)
+
+[Test 4c(ii) Report] N=200, expected_batch_size=200, q=1.000000
+[Test 4c(ii) Report] Stage 4 (HVAE) steps=5, sigma=11.360190
+[Test 4c(ii) Report] Stage 8 (Flow) steps=2, sigma=11.360190
+[Test 4c(ii) Report] Total DP steps=7, delta=8.00e-06
+[Test 4c(ii) Report] Final PRV epsilon: 0.880000
+[Test 4c(ii) Report] Cross-check RDP epsilon: 0.949645
+[Test 4c(ii) Report] Difference |RDP - PRV|: 0.069645
+PASSED
+lumisyn/backend/tests/test_phase1_privacy.py::test_gate_invariance_column_shuffling 
+[Test 4c(iii) Report] Dataset 1 Decision: PROCEED, Target Eps: 1.0
+[Test 4c(iii) Report] Dataset 2 Decision: PROCEED, Target Eps: 1.0
+PASSED
+lumisyn/backend/tests/test_phase1_privacy.py::test_tiny_n_abstains 
+[Test 4c(iv) Report] Tiny n Decision: ABSTAIN
+[Test 4c(iv) Report] Reasons: ['Cohort size too small for differential privacy guarantees (n=25 < 100). Policy action: ABSTAIN.']
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (25, 2)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([25, 2])
+[Stage 3] DCGB complete. Graph: 2 nodes, 1 edges.
+[Stage 5 DAPC] Pipeline execution ABSTAINED: Cohort size too small for differential privacy guarantees (n=25 < 100). Policy action: ABSTAIN.
+PASSED
+lumisyn/backend/tests/test_phase1_privacy.py::test_prv_to_rdp_fallback_forced 
+[Test 4c(v) Report] Forced RDP fallback epsilon: 0.724816, delta: 1e-05
+PASSED
+lumisyn/backend/tests/test_phase1_privacy.py::test_module_validator_and_per_sample_norm_clipping 
+[Test 8 Report] Step loss value: 13238466.0000 (from 1000x scaled inputs, x*100)
+[Test 8 Report] Per-sample unclipped norms (first 4): [224083.83, 215130.75, 156546.16, 215088.84]
+[Test 8 Report] Per-sample clipped norms: [1.25, 1.25, 1.25, 1.25, 1.25, 1.25, 1.25, 1.25]
+[Test 8 Report] Max clipped norm: 1.250000 <= C=1.25
+PASSED
+lumisyn/backend/tests/test_phase1_privacy.py::test_h1_icfm_gradient_independence 
+[Test H1 Report] I-CFM Gradient difference norm on untouched sample 0: 0.00000000e+00
+PASSED
+lumisyn/backend/tests/test_phase1_privacy.py::test_unprotected_artifact_fails_loudly PASSED
+lumisyn/backend/tests/test_phase1_privacy.py::test_hvae_gradient_independence 
+[Test HVAE Independence Report] Stage 4 full pipeline gradient diff on sample 0: 0.00000000e+00
+PASSED
+lumisyn/backend/tests/test_phase1_privacy.py::test_minimum_cohort_size_thresholds 
+[Test Min-n Report] Testing explicit minimum cohort size policy:
+  n= 49 -> Decision: ABSTAIN (Expected: ABSTAIN)
+  n= 50 -> Decision: ABSTAIN (Expected: ABSTAIN)
+  n= 74 -> Decision: ABSTAIN (Expected: ABSTAIN)
+  n= 75 -> Decision: ABSTAIN (Expected: ABSTAIN)
+  n= 99 -> Decision: ABSTAIN (Expected: ABSTAIN)
+  n=100 -> Decision: PROCEED (Expected: PROCEED)
+PASSED
+
+============================= 10 passed in 25.65s =============================
