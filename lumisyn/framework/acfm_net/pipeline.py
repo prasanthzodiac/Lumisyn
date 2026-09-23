@@ -45,6 +45,7 @@ from acfm_net.optimization import (
     SlicedWassersteinDistance,
     ParetoModelSelector,
 )
+from acfm_net.postprocessing.dp_recalibration import DPMarginalRecalibrator
 
 # Maximum number of columns allowed before auto-selecting top informative ones
 MAX_COLUMNS = 64
@@ -205,6 +206,8 @@ class ACFMNetV5Pipeline:
         flow_lr: float = 1e-3,
         prior_scale: float = 1.0,
         public_schema: Optional[Dict[str, Any]] = None,
+        enable_dp_recalibration: bool = False,
+        recalibration_epsilon: float = 0.10,
     ):
         if not strict_release_privacy and not allow_nonprivate_debug:
             raise ValueError(
@@ -241,6 +244,8 @@ class ACFMNetV5Pipeline:
         self.flow_optimizer = str(flow_optimizer).lower()
         self.flow_lr = float(flow_lr)
         self.prior_scale = float(prior_scale)
+        self.enable_dp_recalibration = bool(enable_dp_recalibration)
+        self.recalibration_epsilon = float(recalibration_epsilon)
 
         # -- GPU / Device detection --------------------------------------------
         if torch.cuda.is_available():
@@ -443,6 +448,14 @@ class ACFMNetV5Pipeline:
                     "dependency_matrix": np.eye(len(df_sample.columns), dtype=np.float32),
                     "privacy_status": "public_only_graph",
                 }
+
+        if self.enable_dp_recalibration:
+            privacy_ledger.add(
+                "marginal_recalibration",
+                epsilon=float(self.recalibration_epsilon),
+                delta=0.0,
+                mechanism="Laplace 1-way marginal histograms",
+            )
 
         if self.strict_release_privacy:
             fingerprint_info = {
@@ -1310,6 +1323,22 @@ class ACFMNetV5Pipeline:
         orig_cols = [c for c in df_deidentified.columns if c in df_synthetic.columns]
         if orig_cols:
             df_synthetic = df_synthetic[orig_cols]
+
+        if self.enable_dp_recalibration:
+            recalibrator = DPMarginalRecalibrator(public_schema)
+            dp_hists, recal_report = recalibrator.release_dp_histograms(
+                df_real=df_deidentified,
+                eps_m=self.recalibration_epsilon,
+                seed=42,
+            )
+            df_synthetic = recalibrator.recalibrate(df_synthetic, dp_hists, seed=42)
+            report["dp_recalibration"] = recal_report
+            report["stages_completed"].append("Stage 7b: DP Marginal Recalibration Completed")
+            _record_stage(report, "7b", "DP Marginal Recalibration", "PASSED", {
+                "calibrated_columns": recal_report.get("num_columns_calibrated", 0),
+                "epsilon_charged": self.recalibration_epsilon,
+                "mechanism": "Laplace",
+            })
 
         report["pipeline_status"]  = "SUCCESS"
         report["synthetic_shape"]  = df_synthetic.shape

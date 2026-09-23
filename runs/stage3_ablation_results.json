@@ -1,0 +1,34 @@
+{
+  "dataset_shape": [
+    300,
+    4
+  ],
+  "active_runtime_s": 2.08,
+  "disabled_runtime_s": 1.78,
+  "active_ledger_entries": [
+    {
+      "name": "dependency_graph_statistics",
+      "epsilon": 0.08,
+      "delta": 5.000000000000001e-07,
+      "mechanism": "bounded Laplace dependency matrix"
+    },
+    {
+      "name": "dp_sgd_training",
+      "epsilon": 0.92,
+      "delta": 8.000000000000001e-06,
+      "mechanism": "per-example DP-SGD with PRV/RDP accounting"
+    }
+  ],
+  "disabled_ledger_entries": [
+    {
+      "name": "dp_sgd_training",
+      "epsilon": 1.0,
+      "delta": 8.000000000000001e-06,
+      "mechanism": "per-example DP-SGD with PRV/RDP accounting"
+    }
+  ],
+  "active_accounted_eps": 1.0,
+  "disabled_accounted_eps": 1.0,
+  "discrepancy_explanation": "In identity mode, the graph adjacency matrix is not passed to VelocityNetwork. However, when use_public_graph_only=False, Stage 3 charges 0.08 eps to the privacy ledger, which reduces the remaining training_target_eps from 1.0 to 0.92, increasing noise multiplier sigma. When use_public_graph_only=True, the full 1.0 eps is allocated to DP-SGD training.",
+  "verified_by": "VERIFIED-BY-RUNNING"
+}

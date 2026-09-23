@@ -87,3 +87,32 @@ def test_stage3_pima_clinical_edges_active():
     assert info["clinical_edges"] >= 3
     graph_inactive = bool(info.get("num_edges", 0) == 0 or info.get("clinical_edges", 0) == 0)
     assert graph_inactive is False, "Expected graph_inactive=False for Pima diabetes clinical ontology"
+
+
+def test_stage3b_post_latent_refiner_dimension_handling():
+    """Verify that Stage 3b refiner properly aligns feature dimensions and avoids IndexError when features != latent dim."""
+    from lumisyn.framework.acfm_net.graph.refinement import PostLatentGraphRefiner
+    import networkx as nx
+
+    refiner = PostLatentGraphRefiner(alpha=0.6, prune_threshold=0.1)
+    num_nodes = 78
+    G_initial = nx.Graph()
+    for i in range(num_nodes):
+        G_initial.add_node(i)
+    W_initial = np.zeros((num_nodes, num_nodes), dtype=np.float32)
+    W_initial[0, 1] = 0.5
+    W_initial[1, 0] = 0.5
+
+    # Case 1: latent_Z has features as columns (N=100, num_nodes=78)
+    Z_cols = np.random.randn(100, num_nodes).astype(np.float32)
+    G_ref, W_ref, info = refiner.refine_graph(G_initial, W_initial, Z_cols)
+    assert W_ref.shape == (num_nodes, num_nodes)
+    assert G_ref.number_of_nodes() == num_nodes
+
+    # Case 2: latent_Z has latent_dim != num_nodes (e.g. VAE latent space 64 != 78 nodes)
+    # Must NOT raise IndexError or slice dimensions erroneously
+    Z_mismatch = np.random.randn(100, 64).astype(np.float32)
+    G_ref2, W_ref2, info2 = refiner.refine_graph(G_initial, W_initial, Z_mismatch)
+    assert W_ref2.shape == (num_nodes, num_nodes)
+    assert G_ref2.number_of_nodes() == num_nodes
+

@@ -1,0 +1,444 @@
+{
+  "summary_table": [
+    {
+      "Dataset": "Pima Indians Diabetes (Kaggle)",
+      "Shape": "614x9",
+      "Time": "8.2s",
+      "Corr Error": "0.0242",
+      "TSTR Performance": "AUC=0.000, Acc=3.9%",
+      "TRTR Baseline": "AUC=0.812, Acc=72.1%",
+      "Utility Retention": "5.4%",
+      "Exact Copy %": "0.00%",
+      "Mean DCR": "10436.321",
+      "Headline Epsilon": 1.0,
+      "Formal RDP Epsilon": 1.072335,
+      "Privacy Verified": true,
+      "DP Recalibration": "Stage 7b: PASSED"
+    },
+    {
+      "Dataset": "Breast Cancer Wisconsin (High-Dimensional 31-D)",
+      "Shape": "455x31",
+      "Time": "3.9s",
+      "Corr Error": "0.0151",
+      "TSTR Performance": "AUC=0.000, Acc=0.0%",
+      "TRTR Baseline": "AUC=0.995, Acc=96.5%",
+      "Utility Retention": "0.0%",
+      "Exact Copy %": "0.00%",
+      "Mean DCR": "3190359.473",
+      "Headline Epsilon": 1.0,
+      "Formal RDP Epsilon": 1.071514,
+      "Privacy Verified": true,
+      "DP Recalibration": "Stage 7b: PASSED"
+    },
+    {
+      "Dataset": "Kaggle Bank Customer Churn (Heterogeneous Mixed-Type)",
+      "Shape": "1600x13",
+      "Time": "12.3s",
+      "Corr Error": "0.0083",
+      "TSTR Performance": "AUC=0.000, Acc=0.0%",
+      "TRTR Baseline": "AUC=0.828, Acc=82.5%",
+      "Utility Retention": "0.0%",
+      "Exact Copy %": "0.00%",
+      "Mean DCR": "2188.178",
+      "Headline Epsilon": 1.0,
+      "Formal RDP Epsilon": 1.075127,
+      "Privacy Verified": true,
+      "DP Recalibration": "Stage 7b: PASSED"
+    },
+    {
+      "Dataset": "Actuarial Healthcare & Medical Risk",
+      "Shape": "1070x7",
+      "Time": "84.8s",
+      "Corr Error": "0.0343",
+      "TSTR Performance": "R2=-0.803",
+      "TRTR Baseline": "R2=0.864",
+      "Utility Retention": "0.0%",
+      "Exact Copy %": "0.00%",
+      "Mean DCR": "278.297",
+      "Headline Epsilon": 1.0,
+      "Formal RDP Epsilon": 1.074048,
+      "Privacy Verified": true,
+      "DP Recalibration": "Stage 7b: PASSED"
+    }
+  ],
+  "details": {
+    "Pima Indians Diabetes (Kaggle)": {
+      "summary": {
+        "Dataset": "Pima Indians Diabetes (Kaggle)",
+        "Shape": "614x9",
+        "Time": "8.2s",
+        "Corr Error": "0.0242",
+        "TSTR Performance": "AUC=0.000, Acc=3.9%",
+        "TRTR Baseline": "AUC=0.812, Acc=72.1%",
+        "Utility Retention": "5.4%",
+        "Exact Copy %": "0.00%",
+        "Mean DCR": "10436.321",
+        "Headline Epsilon": 1.0,
+        "Formal RDP Epsilon": 1.072335,
+        "Privacy Verified": true,
+        "DP Recalibration": "Stage 7b: PASSED"
+      },
+      "utility": {
+        "trtr_metric": "AUC=0.812, Acc=72.1%",
+        "tstr_metric": "AUC=0.000, Acc=3.9%",
+        "retention": "5.4%",
+        "tstr_acc": 0.039,
+        "trtr_acc": 0.7208,
+        "tstr_auc": 0.0,
+        "trtr_auc": 0.812
+      },
+      "privacy_report": {
+        "composition": "basic sequential composition",
+        "entries": [
+          {
+            "name": "marginal_recalibration",
+            "epsilon": 0.1,
+            "delta": 0.0,
+            "mechanism": "Laplace 1-way marginal histograms"
+          },
+          {
+            "name": "dp_sgd_training",
+            "epsilon": 0.9,
+            "delta": 8.000000000000001e-06,
+            "mechanism": "per-example DP-SGD with PRV/RDP accounting"
+          }
+        ],
+        "epsilon": 1.0,
+        "delta": 8.000000000000001e-06,
+        "target_epsilon": 1.0,
+        "target_delta": 1e-05,
+        "verified": true,
+        "accountant_training_epsilon": 0.8999999999954236,
+        "meta_charges_epsilon": 0.1,
+        "formal_guarantee_rdp_epsilon": 0.9723352653190173
+      },
+      "dp_recalibration_report": {
+        "mechanism": "Laplace",
+        "adjacency": "add_remove",
+        "sensitivity_L1": 9,
+        "eps_m": 0.1,
+        "delta_m": 0.0,
+        "laplace_scale": 90.0,
+        "num_columns_calibrated": 9,
+        "released_histograms_count": 9,
+        "bins_per_column": {
+          "Pregnancies": 50,
+          "Glucose": 50,
+          "BloodPressure": 50,
+          "SkinThickness": 50,
+          "Insulin": 50,
+          "BMI": 50,
+          "DiabetesPedigreeFunction": 50,
+          "Age": 50,
+          "Outcome": 50
+        },
+        "noise_to_count_ratios": {
+          "Pregnancies": 7.329,
+          "Glucose": 7.329,
+          "BloodPressure": 7.329,
+          "SkinThickness": 7.329,
+          "Insulin": 7.329,
+          "BMI": 7.329,
+          "DiabetesPedigreeFunction": 7.329,
+          "Age": 7.329,
+          "Outcome": 7.329
+        }
+      }
+    },
+    "Breast Cancer Wisconsin (High-Dimensional 31-D)": {
+      "summary": {
+        "Dataset": "Breast Cancer Wisconsin (High-Dimensional 31-D)",
+        "Shape": "455x31",
+        "Time": "3.9s",
+        "Corr Error": "0.0151",
+        "TSTR Performance": "AUC=0.000, Acc=0.0%",
+        "TRTR Baseline": "AUC=0.995, Acc=96.5%",
+        "Utility Retention": "0.0%",
+        "Exact Copy %": "0.00%",
+        "Mean DCR": "3190359.473",
+        "Headline Epsilon": 1.0,
+        "Formal RDP Epsilon": 1.071514,
+        "Privacy Verified": true,
+        "DP Recalibration": "Stage 7b: PASSED"
+      },
+      "utility": {
+        "trtr_metric": "AUC=0.995, Acc=96.5%",
+        "tstr_metric": "AUC=0.000, Acc=0.0%",
+        "retention": "0.0%",
+        "tstr_acc": 0.0,
+        "trtr_acc": 0.9649,
+        "tstr_auc": 0.0,
+        "trtr_auc": 0.9953
+      },
+      "privacy_report": {
+        "composition": "basic sequential composition",
+        "entries": [
+          {
+            "name": "marginal_recalibration",
+            "epsilon": 0.1,
+            "delta": 0.0,
+            "mechanism": "Laplace 1-way marginal histograms"
+          },
+          {
+            "name": "dp_sgd_training",
+            "epsilon": 0.9,
+            "delta": 8.000000000000001e-06,
+            "mechanism": "per-example DP-SGD with PRV/RDP accounting"
+          }
+        ],
+        "epsilon": 1.0,
+        "delta": 8.000000000000001e-06,
+        "target_epsilon": 1.0,
+        "target_delta": 1e-05,
+        "verified": true,
+        "accountant_training_epsilon": 0.9000000000018249,
+        "meta_charges_epsilon": 0.1,
+        "formal_guarantee_rdp_epsilon": 0.971513814159635
+      },
+      "dp_recalibration_report": {
+        "mechanism": "Laplace",
+        "adjacency": "add_remove",
+        "sensitivity_L1": 31,
+        "eps_m": 0.1,
+        "delta_m": 0.0,
+        "laplace_scale": 310.0,
+        "num_columns_calibrated": 31,
+        "released_histograms_count": 31,
+        "bins_per_column": {
+          "mean radius": 50,
+          "mean texture": 50,
+          "mean perimeter": 50,
+          "mean area": 50,
+          "mean smoothness": 50,
+          "mean compactness": 50,
+          "mean concavity": 50,
+          "mean concave points": 50,
+          "mean symmetry": 50,
+          "mean fractal dimension": 50,
+          "radius error": 50,
+          "texture error": 50,
+          "perimeter error": 50,
+          "area error": 50,
+          "smoothness error": 50,
+          "compactness error": 50,
+          "concavity error": 50,
+          "concave points error": 50,
+          "symmetry error": 50,
+          "fractal dimension error": 50,
+          "worst radius": 50,
+          "worst texture": 50,
+          "worst perimeter": 50,
+          "worst area": 50,
+          "worst smoothness": 50,
+          "worst compactness": 50,
+          "worst concavity": 50,
+          "worst concave points": 50,
+          "worst symmetry": 50,
+          "worst fractal dimension": 50,
+          "target": 50
+        },
+        "noise_to_count_ratios": {
+          "mean radius": 34.0659,
+          "mean texture": 34.0659,
+          "mean perimeter": 34.0659,
+          "mean area": 34.0659,
+          "mean smoothness": 34.0659,
+          "mean compactness": 34.0659,
+          "mean concavity": 34.0659,
+          "mean concave points": 34.0659,
+          "mean symmetry": 34.0659,
+          "mean fractal dimension": 34.0659,
+          "radius error": 34.0659,
+          "texture error": 34.0659,
+          "perimeter error": 34.0659,
+          "area error": 34.0659,
+          "smoothness error": 34.0659,
+          "compactness error": 34.0659,
+          "concavity error": 34.0659,
+          "concave points error": 34.0659,
+          "symmetry error": 34.0659,
+          "fractal dimension error": 34.0659,
+          "worst radius": 34.0659,
+          "worst texture": 34.0659,
+          "worst perimeter": 34.0659,
+          "worst area": 34.0659,
+          "worst smoothness": 34.0659,
+          "worst compactness": 34.0659,
+          "worst concavity": 34.0659,
+          "worst concave points": 34.0659,
+          "worst symmetry": 34.0659,
+          "worst fractal dimension": 34.0659,
+          "target": 34.0659
+        }
+      }
+    },
+    "Kaggle Bank Customer Churn (Heterogeneous Mixed-Type)": {
+      "summary": {
+        "Dataset": "Kaggle Bank Customer Churn (Heterogeneous Mixed-Type)",
+        "Shape": "1600x13",
+        "Time": "12.3s",
+        "Corr Error": "0.0083",
+        "TSTR Performance": "AUC=0.000, Acc=0.0%",
+        "TRTR Baseline": "AUC=0.828, Acc=82.5%",
+        "Utility Retention": "0.0%",
+        "Exact Copy %": "0.00%",
+        "Mean DCR": "2188.178",
+        "Headline Epsilon": 1.0,
+        "Formal RDP Epsilon": 1.075127,
+        "Privacy Verified": true,
+        "DP Recalibration": "Stage 7b: PASSED"
+      },
+      "utility": {
+        "trtr_metric": "AUC=0.828, Acc=82.5%",
+        "tstr_metric": "AUC=0.000, Acc=0.0%",
+        "retention": "0.0%",
+        "tstr_acc": 0.0,
+        "trtr_acc": 0.825,
+        "tstr_auc": 0.0,
+        "trtr_auc": 0.828
+      },
+      "privacy_report": {
+        "composition": "basic sequential composition",
+        "entries": [
+          {
+            "name": "marginal_recalibration",
+            "epsilon": 0.1,
+            "delta": 0.0,
+            "mechanism": "Laplace 1-way marginal histograms"
+          },
+          {
+            "name": "dp_sgd_training",
+            "epsilon": 0.9,
+            "delta": 8.000000000000001e-06,
+            "mechanism": "per-example DP-SGD with PRV/RDP accounting"
+          }
+        ],
+        "epsilon": 1.0,
+        "delta": 8.000000000000001e-06,
+        "target_epsilon": 1.0,
+        "target_delta": 1e-05,
+        "verified": true,
+        "accountant_training_epsilon": 0.8999999999864382,
+        "meta_charges_epsilon": 0.1,
+        "formal_guarantee_rdp_epsilon": 0.9751270044435715
+      },
+      "dp_recalibration_report": {
+        "mechanism": "Laplace",
+        "adjacency": "add_remove",
+        "sensitivity_L1": 13,
+        "eps_m": 0.1,
+        "delta_m": 0.0,
+        "laplace_scale": 130.0,
+        "num_columns_calibrated": 13,
+        "released_histograms_count": 13,
+        "bins_per_column": {
+          "CustomerId": 50,
+          "Surname": 1006,
+          "CreditScore": 50,
+          "Geography": 4,
+          "Gender": 3,
+          "Age": 50,
+          "Tenure": 50,
+          "Balance": 50,
+          "Num Of Products": 50,
+          "Has Credit Card": 50,
+          "Is Active Member": 50,
+          "Estimated Salary": 50,
+          "Churn": 50
+        },
+        "noise_to_count_ratios": {
+          "CustomerId": 4.0625,
+          "Surname": 81.7375,
+          "CreditScore": 4.0625,
+          "Geography": 0.325,
+          "Gender": 0.2437,
+          "Age": 4.0625,
+          "Tenure": 4.0625,
+          "Balance": 4.0625,
+          "Num Of Products": 4.0625,
+          "Has Credit Card": 4.0625,
+          "Is Active Member": 4.0625,
+          "Estimated Salary": 4.0625,
+          "Churn": 4.0625
+        }
+      }
+    },
+    "Actuarial Healthcare & Medical Risk": {
+      "summary": {
+        "Dataset": "Actuarial Healthcare & Medical Risk",
+        "Shape": "1070x7",
+        "Time": "84.8s",
+        "Corr Error": "0.0343",
+        "TSTR Performance": "R2=-0.803",
+        "TRTR Baseline": "R2=0.864",
+        "Utility Retention": "0.0%",
+        "Exact Copy %": "0.00%",
+        "Mean DCR": "278.297",
+        "Headline Epsilon": 1.0,
+        "Formal RDP Epsilon": 1.074048,
+        "Privacy Verified": true,
+        "DP Recalibration": "Stage 7b: PASSED"
+      },
+      "utility": {
+        "trtr_metric": "R2=0.864",
+        "tstr_metric": "R2=-0.803",
+        "retention": "0.0%",
+        "tstr_r2": -0.8026,
+        "trtr_r2": 0.8636
+      },
+      "privacy_report": {
+        "composition": "basic sequential composition",
+        "entries": [
+          {
+            "name": "marginal_recalibration",
+            "epsilon": 0.1,
+            "delta": 0.0,
+            "mechanism": "Laplace 1-way marginal histograms"
+          },
+          {
+            "name": "dp_sgd_training",
+            "epsilon": 0.9,
+            "delta": 8.000000000000001e-06,
+            "mechanism": "per-example DP-SGD with PRV/RDP accounting"
+          }
+        ],
+        "epsilon": 1.0,
+        "delta": 8.000000000000001e-06,
+        "target_epsilon": 1.0,
+        "target_delta": 1e-05,
+        "verified": true,
+        "accountant_training_epsilon": 0.8999999999877466,
+        "meta_charges_epsilon": 0.1,
+        "formal_guarantee_rdp_epsilon": 0.9740479273828467
+      },
+      "dp_recalibration_report": {
+        "mechanism": "Laplace",
+        "adjacency": "add_remove",
+        "sensitivity_L1": 7,
+        "eps_m": 0.1,
+        "delta_m": 0.0,
+        "laplace_scale": 70.0,
+        "num_columns_calibrated": 7,
+        "released_histograms_count": 7,
+        "bins_per_column": {
+          "age": 50,
+          "sex": 3,
+          "bmi": 50,
+          "children": 50,
+          "smoker": 3,
+          "region": 5,
+          "charges": 50
+        },
+        "noise_to_count_ratios": {
+          "age": 3.271,
+          "sex": 0.1963,
+          "bmi": 3.271,
+          "children": 3.271,
+          "smoker": 0.1963,
+          "region": 0.3271,
+          "charges": 3.271
+        }
+      }
+    }
+  }
+}
