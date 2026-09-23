@@ -116,3 +116,73 @@ def test_stage3b_post_latent_refiner_dimension_handling():
     assert W_ref2.shape == (num_nodes, num_nodes)
     assert G_ref2.number_of_nodes() == num_nodes
 
+
+def test_stage3_stage3b_active_in_velocity_network():
+    """Verify that Stage 3 & 3b domain graph adjacency actively influences VelocityNetwork vector field."""
+    import torch
+    from lumisyn.framework.acfm_net.generative.ot_cfm import ContinuousOTCFM, VelocityNetwork
+
+    d = 8
+    # Construct non-trivial symmetric adjacency matrix
+    adj = torch.zeros(d, d)
+    adj[0, 1] = adj[1, 0] = 0.8
+    adj[2, 3] = adj[3, 2] = 0.7
+
+    vel_net_graph = VelocityNetwork(data_dim=d, adj_matrix=adj)
+    vel_net_no_graph = VelocityNetwork(data_dim=d, adj_matrix=None)
+
+    # Initialize non-zero output layer weights so outputs are non-zero
+    torch.nn.init.normal_(vel_net_no_graph.output_layer.weight, std=0.1)
+    torch.nn.init.normal_(vel_net_no_graph.output_layer.bias, std=0.1)
+
+    # Copy identical weights for non-graph parameters
+    with torch.no_grad():
+        for k in vel_net_no_graph.state_dict():
+            if k not in ["adj_matrix", "graph_weight"]:
+                vel_net_graph.state_dict()[k].copy_(vel_net_no_graph.state_dict()[k])
+
+    z = torch.randn(4, d)
+    t = torch.tensor([[0.5], [0.5], [0.5], [0.5]])
+
+    v_graph = vel_net_graph(z, t)
+    v_no_graph = vel_net_no_graph(z, t)
+
+    # Active graph guidance must change the velocity field output
+    assert not torch.allclose(v_graph, v_no_graph, atol=1e-4), "Expected graph guidance to actively modify velocity field"
+    # Ensure adj_matrix is registered and non-trivial
+    assert vel_net_graph.adj_matrix is not None
+    assert vel_net_graph.graph_weight.item() > 0.0
+
+
+def test_stage4_hvae_anti_collapse_under_dp():
+    """Verify that Hierarchical VAE with free_bits=0.5 and beta_kl=1e-4 prevents posterior collapse under DP."""
+    import torch
+    from lumisyn.framework.acfm_net.representation.hvae import HierarchicalVAE
+    from lumisyn.framework.acfm_net.privacy.dpsgd import DPSGDWrapper
+
+    torch.manual_seed(42)
+    in_dim = 8
+    N = 100
+    x = torch.randn(N, in_dim)
+    hvae = HierarchicalVAE(
+        in_dim=in_dim,
+        global_dim=4,
+        group_dim=2,
+        num_groups=2,
+        beta_kl=1e-4,
+        free_bits=0.5,
+        logvar_init_bias=-2.5
+    )
+    opt = torch.optim.Adam(hvae.parameters(), lr=5e-3)
+    dp = DPSGDWrapper(hvae, opt, max_grad_norm=1.25, noise_multiplier=0.5, target_epsilon=1.0, target_delta=1e-5, expected_batch_size=50)
+
+    loader = torch.utils.data.DataLoader(torch.utils.data.TensorDataset(x), batch_size=50, shuffle=False)
+    for (xb,) in loader:
+        out = hvae(xb)
+        dp.step_microbatch(out["per_sample_loss"])
+
+    final_out = hvae(x)
+    total_kl = final_out["total_kl_nats"].item()
+    # Must NOT suffer total collapse to ~0.0055 nats
+    assert total_kl >= 0.5, f"Expected total_kl_nats >= 0.5, got {total_kl:.4f}"
+

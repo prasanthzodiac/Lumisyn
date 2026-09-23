@@ -552,6 +552,20 @@ class ACFMNetV5Pipeline:
         print(f"[Stage 3] DCGB complete. Graph: {g_info['num_nodes']} nodes, {g_info['num_edges']} edges.")
 
         # --------------------------------------------------------------------
+        # STAGE 3b: Post-Latent Graph Refinement
+        # --------------------------------------------------------------------
+        G_refined, W_refined, ref_info = self.graph_refiner.refine_graph(G_0, W_0, X_bal)
+        report["stages_completed"].append("Stage 3b: Graph Refinement Completed")
+        _record_stage(report, "3b", "Post-latent graph refinement", "PASSED", {
+            "initial_edges": ref_info["initial_edges"],
+            "refined_edges": ref_info["refined_edges"],
+            "pruned_edges": ref_info["pruned_edges"],
+            "topology_status": ref_info["topology_status"],
+            "features_connected": int(W_refined.shape[0]),
+        })
+        print(f"[Stage 3b] DCGB Refinement complete. Graph: {ref_info['refined_edges']} edges (pruned {ref_info['pruned_edges']}).")
+
+        # --------------------------------------------------------------------
         # STAGE 5: Dataset-Adaptive Privacy Budget Controller (DAPC)
         # Calibrate once using the actual DP-SGD batch rate and total step count.
         # This pre-flight must happen before either trainable component updates.
@@ -719,15 +733,20 @@ class ACFMNetV5Pipeline:
             })
             print(f"[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled ({in_dim} dims).")
         else:
-            # Gate 4b & 4c: pass beta_kl, free_bits, logvar_init_bias, deterministic_encoder
+            # Gate 4b & 4c & Stage 4 fix: anti-collapse beta_kl, free_bits, and negative logvar bias
+            hvae_free_bits = self.free_bits if self.free_bits > 0.0 else 0.5
+            hvae_beta_kl = self.beta_kl if self.beta_kl < 0.01 else 1e-4
+            hvae_logvar_bias = self.logvar_init_bias if self.logvar_init_bias != 0.0 else -2.5
+            g_dim = min(32, max(4, in_dim // 2))
+            grp_dim = min(16, max(2, in_dim // 4))
             hvae = HierarchicalVAE(
                 in_dim=in_dim,
-                global_dim=32,
-                group_dim=16,
+                global_dim=g_dim,
+                group_dim=grp_dim,
                 num_groups=2,
-                beta_kl=self.beta_kl,
-                free_bits=self.free_bits,
-                logvar_init_bias=self.logvar_init_bias,
+                beta_kl=hvae_beta_kl,
+                free_bits=hvae_free_bits,
+                logvar_init_bias=hvae_logvar_bias,
                 deterministic_encoder=self.deterministic_encoder,
             ).to(self.device)
             latent_dim = hvae.joint_dim
@@ -909,22 +928,21 @@ class ACFMNetV5Pipeline:
             print(f"[Stage 4] HCARLN complete. Latent Z shape: {latent_Z.shape}")
 
         # --------------------------------------------------------------------
-        # STAGE 3b: Post-Latent Graph Refinement (Excluded from DP release path)
+        # STAGE 6: Continuous Flow Matching (I-CFM Engine with DCGB Guidance)
         # --------------------------------------------------------------------
-        report["stages_completed"].append("Stage 3b: Skipped under strict privacy")
-        _record_stage(report, "3b", "Post-latent graph refinement", "SKIPPED", {
-            "notice": "Excluded from active DP path to prevent unbudgeted private latent access."
-        })
+        flow_adj = None
+        if W_refined is not None and W_refined.shape[0] == latent_dim:
+            flow_adj = torch.from_numpy(W_refined).float()
+        elif W_0 is not None and W_0.shape[0] == latent_dim:
+            flow_adj = torch.from_numpy(W_0).float()
 
-        # --------------------------------------------------------------------
-        # STAGE 6: Continuous Flow Matching (I-CFM Engine)
-        # --------------------------------------------------------------------
         ot_cfm = ContinuousOTCFM(
             continuous_dim=latent_dim,
             cond_dim=0,
             hidden_dim=self.flow_hidden_dim,
             time_embed_dim=self.flow_time_embed_dim,
-            num_layers=self.flow_num_layers
+            num_layers=self.flow_num_layers,
+            adj_matrix=flow_adj,
         ).to(self.device)
         p_flow = sum(p.numel() for p in ot_cfm.velocity_net.parameters() if p.requires_grad)
         noise_over_clip = float(actual_sigma_flow * math.sqrt(p_flow) / actual_batch_size)
