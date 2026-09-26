@@ -1,0 +1,7 @@
+RESULT Pima bs=None ep=10 eps=0.753 sigma=18.56 steps=20 AUC 0.546+-0.096
+RESULT Pima bs=64 ep=10 eps=0.753 sigma=5.36 steps=100 AUC 0.478+-0.096
+RESULT Pima bs=64 ep=40 eps=0.753 sigma=10.44 steps=400 AUC 0.517+-0.095
+RESULT Pima bs=128 ep=40 eps=0.753 sigma=14.73 steps=200 AUC 0.505+-0.153
+RESULT Pima bs=32 ep=40 eps=0.753 sigma=7.40 steps=800 AUC 0.540+-0.077
+
+[exited with code 0]

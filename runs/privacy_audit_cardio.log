@@ -1,0 +1,61 @@
+Adult encoded: N=20000, d=12, blocks=12
+  [A] seed 0: OT max so far 1.250, I-CFM 0.825
+  [A] seed 1: OT max so far 1.250, I-CFM 0.881
+  [A] seed 2: OT max so far 1.484, I-CFM 0.892
+  [A] seed 3: OT max so far 1.484, I-CFM 0.975
+  [A] seed 4: OT max so far 1.484, I-CFM 0.975
+  [A] seed 5: OT max so far 1.484, I-CFM 0.975
+  [A] seed 6: OT max so far 1.484, I-CFM 0.975
+  [A] seed 7: OT max so far 1.484, I-CFM 0.975
+  [A] seed 8: OT max so far 1.484, I-CFM 0.975
+  [A] seed 9: OT max so far 1.484, I-CFM 0.975
+C:\Users\sarat\AppData\Local\Programs\Python\Python312\Lib\site-packages\opacus\accountants\analysis\rdp.py:332: UserWarning: Optimal order is the largest alpha. Please consider expanding the range of alphas to get a tighter privacy bound.
+  warnings.warn(
+{
+  "adversary": "top-3 of 200 real + 63 projected-prior + 50 random valid records by reassignment count, then 150-step hill climb over valid records",
+  "n_trials": 100,
+  "batch_ot": {
+    "sensitivity_over_2C_mean": 1.0637785260807961,
+    "sensitivity_over_2C_std": 0.11788100133524251,
+    "sensitivity_over_2C_max": 1.4837084018912436,
+    "fraction_exceeding_bound": 0.69
+  },
+  "i_cfm": {
+    "sensitivity_over_2C_mean": 0.7135273290926366,
+    "sensitivity_over_2C_std": 0.07682823410551533,
+    "sensitivity_over_2C_max": 0.9752037792444403,
+    "fraction_exceeding_bound": 0.0
+  },
+  "time_s": 662.0,
+  "whitebox_step_audit": {
+    "batch_ot": {
+      "n_per_hypothesis": 1000000,
+      "sigma": 2.0703125,
+      "sensitivity_over_2C": 1.4837084018912436,
+      "fpr": 0.236998,
+      "fnr": 0.236931,
+      "mu_claimed": 0.9660377358490566,
+      "mu_lower_bound_95": 1.42679974278582,
+      "violation_certified": true,
+      "per_step_eps_claimed_delta1e-5": 4.205729401694236,
+      "per_step_eps_lower_bound_delta1e-5": 6.6426636470192095,
+      "full_run_eps_reported": 0.839406195160951,
+      "full_run_eps_min_valid_certificate": 1.4735942037160645
+    },
+    "i_cfm": {
+      "n_per_hypothesis": 1000000,
+      "sigma": 2.0703125,
+      "sensitivity_over_2C": 0.9752037792444403,
+      "fpr": 0.318565,
+      "fnr": 0.319509,
+      "mu_claimed": 0.9660377358490566,
+      "mu_lower_bound_95": 0.9356692845931942,
+      "violation_certified": false,
+      "per_step_eps_claimed_delta1e-5": 4.205729401694236,
+      "per_step_eps_lower_bound_delta1e-5": 4.053553325663293,
+      "full_run_eps_reported": 0.839406195160951,
+      "full_run_eps_min_valid_certificate": 0.839406195160951
+    }
+  }
+}
+Saved to C:\Users\sarat\Documents\Research\runs\privacy_audit.json

@@ -1,5 +1,5 @@
-STAGE: Stage 3, 3b, 4 Fixes & Verification
-STEP: All 84 unit tests passing, Stage 3/3b active in velocity flow matching, Stage 4 anti-collapse verified under DP
+STAGE: DP-SGD regression fix, DAPC/CDGL honesty fixes, benchmark schema corrigendum
+STEP: Fixed dpsgd.py silent-except masking a double-backward crash (regression from wiring Stage 3b into VelocityNetwork); wired DAPC's real risk-vector reporting; fixed CDGL certificate to report a measured result instead of echoing an input flag; found and fixed a missing public_schema bug in run_hard_stress_test.py that put every unmatched column on a meaningless +/-1000 scale, plus a Stage 7b recalibrator bug that turned rounded binary/integer columns back into arbitrary floats. Re-ran full benchmark with real numbers — see report/RESEARCH_PAPER_BENCHMARK_REPORT.md Corrigendum (Sec 6).
 ETA: Complete
-TIMESTAMP: 2026-09-23T21:52:15+05:30
-TEST_STATUS: 84 passed, 0 failed (100% pass rate)
+TIMESTAMP: 2026-09-23T (this session)
+TEST_STATUS: 84 passed, 0 failed (100% pass rate), verified by actual rerun (not just recorded)

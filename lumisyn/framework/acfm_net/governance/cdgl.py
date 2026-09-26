@@ -291,7 +291,7 @@ class ClinicalDataGovernanceLayer:
             passed_irb=irb_passed,
             passed_deid=deid_passed,
             passed_consent=consent_passed,
-            direct_identifiers_removed=hipaa_flag,
+            direct_identifiers_removed=deid_passed,
             gdpr_compliant=gdpr_flag,
             audit_trail_handle=audit_handle,
             phi_columns_removed=phi_dropped,

@@ -119,6 +119,9 @@ def enforce_domain_constraints(
 ) -> pd.DataFrame:
     """
     Final post-processing pass enforcing domain constraints and empirical QRM alignment.
+    Deliberately unreachable in practice: align_empirical_distributions() below always
+    raises (quarantined, forbidden under DP), so this whole non-strict fallback path is a
+    hard safety gate rather than a usable code path. See test_enforce_public_domain_constraints_kinds.
     """
     from acfm_net.preparation.encoding import _detect_column_kind
 

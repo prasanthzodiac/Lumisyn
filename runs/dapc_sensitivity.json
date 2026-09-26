@@ -1,0 +1,93 @@
+{
+  "datasets": {
+    "Pima Indians Diabetes (Kaggle)": {
+      "rounded_n": 750,
+      "d_encoded": 9,
+      "eps_nominal": 0.7768,
+      "eps_p05": 0.7371,
+      "eps_p95": 0.8129,
+      "max_abs_dev": 0.0792
+    },
+    "Breast Cancer Wisconsin (High-Dimensional 31-D)": {
+      "rounded_n": 550,
+      "d_encoded": 31,
+      "eps_nominal": 0.7344,
+      "eps_p05": 0.6873,
+      "eps_p95": 0.7806,
+      "max_abs_dev": 0.1042
+    },
+    "Kaggle Bank Customer Churn (Heterogeneous Mixed-Type)": {
+      "rounded_n": 2000,
+      "d_encoded": 16,
+      "eps_nominal": 0.826,
+      "eps_p05": 0.7927,
+      "eps_p95": 0.8579,
+      "max_abs_dev": 0.0766
+    },
+    "Actuarial Healthcare & Medical Risk": {
+      "rounded_n": 1350,
+      "d_encoded": 15,
+      "eps_nominal": 0.7838,
+      "eps_p05": 0.7515,
+      "eps_p95": 0.8151,
+      "max_abs_dev": 0.0679
+    },
+    "Synthetic Near-Abstain (N=105)": {
+      "rounded_n": 100,
+      "d_encoded": 6,
+      "eps_nominal": 0.6555,
+      "eps_p05": 0.5831,
+      "eps_p95": 0.7311,
+      "max_abs_dev": 0.153
+    },
+    "Synthetic Small (N=300)": {
+      "rounded_n": 300,
+      "d_encoded": 9,
+      "eps_nominal": 0.7085,
+      "eps_p05": 0.645,
+      "eps_p95": 0.771,
+      "max_abs_dev": 0.143
+    },
+    "Synthetic Medium (N=2000)": {
+      "rounded_n": 2000,
+      "d_encoded": 11,
+      "eps_nominal": 0.8818,
+      "eps_p05": 0.8452,
+      "eps_p95": 0.9142,
+      "max_abs_dev": 0.084
+    },
+    "Synthetic High-Dim (N=1000, d=60)": {
+      "rounded_n": 1000,
+      "d_encoded": 61,
+      "eps_nominal": 0.7573,
+      "eps_p05": 0.7104,
+      "eps_p95": 0.8019,
+      "max_abs_dev": 0.1081
+    },
+    "Synthetic Large Regression (N=8000)": {
+      "rounded_n": 8000,
+      "d_encoded": 13,
+      "eps_nominal": 0.8907,
+      "eps_p05": 0.8521,
+      "eps_p95": 0.9248,
+      "max_abs_dev": 0.0905
+    },
+    "Synthetic XLarge (N=30000)": {
+      "rounded_n": 30000,
+      "d_encoded": 7,
+      "eps_nominal": 0.905,
+      "eps_p05": 0.8666,
+      "eps_p95": 0.9384,
+      "max_abs_dev": 0.0912
+    }
+  },
+  "perturbation": "weights ~ Dirichlet(50 w0), gammas x U(0.8,1.2), beta ~ U(2,3); 2000 draws",
+  "kendall_tau_median": 0.9555555555555554,
+  "kendall_tau_p05": 0.8222222222222221,
+  "max_eps_change_for_10pct_weight_bump": {
+    "w_sens": 0.007224335036619789,
+    "w_scale": 0.011322247410411324,
+    "w_dim": 0.004735789702754012,
+    "w_task": 0.004778215442092781
+  }
+}

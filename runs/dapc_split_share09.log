@@ -1,0 +1,12 @@
+RESULT adult share_0.9 seed=0 AUC=0.903 TVD2ff=0.105 TVD2lf=0.037 eps=0.741 25.3s
+RESULT adult share_0.9 seed=1 AUC=0.905 TVD2ff=0.107 TVD2lf=0.041 eps=0.741 25.9s
+RESULT adult share_0.9 seed=2 AUC=0.908 TVD2ff=0.105 TVD2lf=0.038 eps=0.741 40.9s
+RESULT adult share_0.9_marginals_only seed=0 AUC=0.908 TVD2ff=0.101 TVD2lf=0.036 eps=0.741 40.5s
+RESULT adult share_0.9_marginals_only seed=1 AUC=0.906 TVD2ff=0.104 TVD2lf=0.038 eps=0.741 40.9s
+RESULT adult share_0.9_marginals_only seed=2 AUC=0.902 TVD2ff=0.105 TVD2lf=0.039 eps=0.741 40.8s
+RESULT cardio share_0.9 seed=0 AUC=0.774 TVD2ff=0.051 TVD2lf=0.011 eps=0.849 52.0s
+RESULT cardio share_0.9 seed=1 AUC=0.778 TVD2ff=0.052 TVD2lf=0.011 eps=0.849 51.5s
+RESULT cardio share_0.9 seed=2 AUC=0.783 TVD2ff=0.049 TVD2lf=0.010 eps=0.849 51.9s
+RESULT cardio share_0.9_marginals_only seed=0 AUC=0.782 TVD2ff=0.052 TVD2lf=0.011 eps=0.849 52.3s
+RESULT cardio share_0.9_marginals_only seed=1 AUC=0.776 TVD2ff=0.053 TVD2lf=0.011 eps=0.849 51.0s
+RESULT cardio share_0.9_marginals_only seed=2 AUC=0.778 TVD2ff=0.051 TVD2lf=0.010 eps=0.849 50.4s

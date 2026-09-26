@@ -196,6 +196,7 @@ class ContinuousOTCFM(nn.Module):
         use_ot_coupling: bool = False,
         return_per_sample: bool = False,
         allow_nonprivate_ot: bool = False,
+        noise_multiplicity: int = 1,
     ) -> torch.Tensor:
         """
         Computes Flow Matching regression loss against straight trajectories.
@@ -211,9 +212,16 @@ class ContinuousOTCFM(nn.Module):
                              as a non-private ablation (requires allow_nonprivate_ot=True).
             return_per_sample: If True, returns (B,) per-example loss for DP-SGD clipping.
             allow_nonprivate_ot: Safety guard requiring explicit acknowledgement for batch OT.
+            noise_multiplicity: K > 1 averages each record's loss over K independent (z_0, t)
+                             draws (DPDM "noise multiplicity", Dockhorn et al. 2023). The result
+                             is still one loss per record, so per-example sensitivity is unchanged
+                             and the privacy cost is identical; only gradient variance drops. I-CFM only.
         """
         B = z_1.shape[0]
         device = z_1.device
+        K = int(noise_multiplicity) if not use_ot_coupling else 1
+        if K > 1:
+            z_1 = z_1.repeat(K, 1)
 
         # 1. Sample standard normal base prior z_0 ~ N(0, I) independently per record
         z_0 = torch.randn_like(z_1)
@@ -232,7 +240,7 @@ class ContinuousOTCFM(nn.Module):
             z_1_coupled = z_1
 
         # 3. Sample continuous time t ~ Uniform(0, 1) independently per record
-        t = torch.rand((B, 1), device=device)
+        t = torch.rand((z_1.shape[0], 1), device=device)
 
         # 4. Straight trajectory and target velocity
         z_t = (1.0 - t) * z_0 + t * z_1_coupled
@@ -243,6 +251,8 @@ class ContinuousOTCFM(nn.Module):
 
         # 6. Mean squared error velocity regression loss
         per_sample_loss = F.mse_loss(v_pred, u_t, reduction="none").mean(dim=1)
+        if K > 1:
+            per_sample_loss = per_sample_loss.view(K, B).mean(dim=0)
         return per_sample_loss if return_per_sample else per_sample_loss.mean()
 
     @torch.no_grad()

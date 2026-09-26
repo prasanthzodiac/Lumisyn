@@ -1,0 +1,9 @@
+eps_target=50.0 adjacency=True seed=0 time=39s TSTR_AUC=0.446 eps=28.614 sigma=0.416
+eps_target=50.0 adjacency=True seed=1 time=39s TSTR_AUC=0.670 eps=28.614 sigma=0.416
+eps_target=50.0 adjacency=True seed=2 time=39s TSTR_AUC=0.576 eps=28.614 sigma=0.416
+eps_target=1.0 adjacency=False seed=0 time=20s TSTR_AUC=0.532 eps=0.741 sigma=2.598
+eps_target=1.0 adjacency=False seed=1 time=21s TSTR_AUC=0.445 eps=0.741 sigma=2.598
+eps_target=1.0 adjacency=False seed=2 time=21s TSTR_AUC=0.541 eps=0.741 sigma=2.598
+eps_target=50.0 adjacency=False seed=0 time=39s TSTR_AUC=0.403 eps=28.614 sigma=0.416
+eps_target=50.0 adjacency=False seed=1 time=39s TSTR_AUC=0.640 eps=28.614 sigma=0.416
+eps_target=50.0 adjacency=False seed=2 time=74s TSTR_AUC=0.676 eps=28.614 sigma=0.416

@@ -35,36 +35,38 @@ def test_dapc_sharp_abstain_threshold_at_99_vs_100():
 
 
 def test_dapc_gate_invariance_to_private_data():
-    """Gate decision must evaluate strictly public n, d, schema and ignore private data values."""
+    """
+    DAPC reads only public metadata (rounded n, d, declared column sensitivity, task flag).
+    Gate: public-only thresholds. Epsilon: adapts to public metadata, is deterministic,
+    stays inside [eps_min, eps_max], and is monotone (more risk -> smaller epsilon).
+    """
     allocator = AdaptiveBudgetAllocator(target_epsilon=1.0, target_delta=1e-5)
 
-    # Vary adversarial conditions: decision depends strictly on public (n, d, schema)
     for n_val in [100, 500, 10000]:
         for d_val in [5, 50, 200]:
-            dec, reasons = allocator.evaluate_defensive_safety(
-                num_samples=n_val,
-                num_features=d_val,
-                public_schema=None,
-            )
+            dec, _ = allocator.evaluate_defensive_safety(num_samples=n_val, num_features=d_val, public_schema=None)
             assert dec == "PROCEED"
-
-    # Excessive dimension d > 500 must reject
     dec_rej, _ = allocator.evaluate_defensive_safety(num_samples=1000, num_features=501)
     assert dec_rej == "REJECT"
 
-    # Single pass on analyze_dataset_dapc with small steps
-    cert = allocator.analyze_dataset_dapc(
-        sensitivity_vector=torch.ones(15) * 0.5,
-        num_samples=1000,
-        num_features=15,
-        reid_risk=0.8,
-        unique_ratio=0.9,
-        dep_score=0.8,
-        sample_rate=0.05,
-        steps=20,
-    )
-    assert cert["decision"] == "PROCEED"
-    assert cert["selected_target_epsilon"] == 1.0
+    def eps(n, d, sens=0.1, high_stakes=False):
+        cert = allocator.analyze_dataset_dapc(
+            sensitivity_vector=torch.ones(d) * sens, num_samples=n, num_features=d,
+            is_high_stakes=high_stakes, sample_rate=0.05, steps=20,
+        )
+        assert cert["decision"] == "PROCEED"
+        assert cert["risk_inputs_public_only"] is True
+        e = cert["selected_target_epsilon"]
+        assert allocator.eps_min <= e <= allocator.eps_max
+        return e
+
+    # Deterministic: no hidden randomness in the selection.
+    assert eps(1000, 15) == eps(1000, 15)
+    # Monotone in each public risk factor.
+    assert eps(20000, 15) > eps(1000, 15) > eps(150, 15), "smaller cohort must get smaller epsilon"
+    assert eps(1000, 10) > eps(1000, 200), "higher dimension must get smaller epsilon"
+    assert eps(1000, 15, sens=0.1) > eps(1000, 15, sens=0.9), "more sensitive schema must get smaller epsilon"
+    assert eps(1000, 15) > eps(1000, 15, high_stakes=True), "high-stakes target must get smaller epsilon"
 
 
 def test_identity_mode_and_vae_mode_accounting_ledger_sum():

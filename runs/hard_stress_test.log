@@ -1,0 +1,849 @@
+=====================================================================================
+      RESEARCH-GRADE L-OTFM MULTI-DATASET HARD STRESS TEST SUITE
+      5 seeds per dataset; mean +- std reported
+=====================================================================================
+
+[1/4] BENCHMARK DATASET: Pima Indians Diabetes (Kaggle)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (614, 9)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([614, 9])
+[Stage 3] DCGB complete. Graph: 9 nodes, 3 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 3 edges (pruned 33).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (9 dims).
+[Stage 6 VelocityNet] Parameters: 86,300 | Flow sigma: 21.1735 | noise/clip = sigma*sqrt(p)/B: 12.148669
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=512, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.3932 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=10.2233/10.2843/17.5691 | Accumulated DP eps=0.1952
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.4109 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=10.3189/10.0940/18.3365 | Accumulated DP eps=0.2792
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.3868 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=10.2550/10.1938/18.7690 | Accumulated DP eps=0.3452
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.3786 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=10.2064/10.1431/18.9224 | Accumulated DP eps=0.4016
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.3449 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=10.0936/9.9542/17.6737 | Accumulated DP eps=0.4519
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.3357 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=10.1053/9.9919/19.3633 | Accumulated DP eps=0.4977
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.3671 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=10.2169/10.1747/17.7624 | Accumulated DP eps=0.5402
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.3132 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.9955/9.9603/17.3870 | Accumulated DP eps=0.5801
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.2912 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.9542/9.8625/17.5847 | Accumulated DP eps=0.6177
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.2607 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.8250/9.7980/17.1799 | Accumulated DP eps=0.6535
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 20 | Final EMA decay: 0.70000
+  L2 distance of released (EMA) weights from init: 1.096174
+  L2 distance of live weights from init:           1.103147
+  Flow loss comparison: Live model = 1.3119 vs EMA model = 1.2966
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.753500 (Target: 0.7535)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.804422
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.653500
+  DP-SGD RDP       (without Laplace):         0.704422
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.2607 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 614 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (614, 9)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (614, 9)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([614, 9])
+[Stage 3] DCGB complete. Graph: 9 nodes, 3 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 3 edges (pruned 33).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (9 dims).
+[Stage 6 VelocityNet] Parameters: 86,300 | Flow sigma: 21.1735 | noise/clip = sigma*sqrt(p)/B: 12.148669
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=512, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.3782 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.7136/9.8097/16.5908 | Accumulated DP eps=0.1952
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.3897 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.7458/9.6055/16.7921 | Accumulated DP eps=0.2792
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.3997 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.8459/9.7767/16.6745 | Accumulated DP eps=0.3452
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.3198 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.5144/9.4477/17.8737 | Accumulated DP eps=0.4016
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.3156 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.5273/9.4594/19.4078 | Accumulated DP eps=0.4519
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.3399 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.6160/9.5601/16.3407 | Accumulated DP eps=0.4977
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.3175 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.5913/9.5145/17.6059 | Accumulated DP eps=0.5402
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.3160 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.5744/9.4540/20.8408 | Accumulated DP eps=0.5801
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.3094 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.5125/9.5747/16.6381 | Accumulated DP eps=0.6177
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.3438 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.6985/9.5494/16.7589 | Accumulated DP eps=0.6535
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 20 | Final EMA decay: 0.70000
+  L2 distance of released (EMA) weights from init: 1.098684
+  L2 distance of live weights from init:           1.105693
+  Flow loss comparison: Live model = 1.2874 vs EMA model = 1.3553
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.753500 (Target: 0.7535)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.804422
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.653500
+  DP-SGD RDP       (without Laplace):         0.704422
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.3438 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 614 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (614, 9)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (614, 9)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([614, 9])
+[Stage 3] DCGB complete. Graph: 9 nodes, 3 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 3 edges (pruned 33).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (9 dims).
+[Stage 6 VelocityNet] Parameters: 86,300 | Flow sigma: 21.1735 | noise/clip = sigma*sqrt(p)/B: 12.148669
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=512, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.4056 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.7792/9.7509/17.2331 | Accumulated DP eps=0.1952
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.4675 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.9989/9.9562/17.5815 | Accumulated DP eps=0.2792
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.3584 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.6580/9.5623/17.5660 | Accumulated DP eps=0.3452
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.3518 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.6587/9.5417/16.4991 | Accumulated DP eps=0.4016
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.3348 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.5762/9.4309/16.3243 | Accumulated DP eps=0.4519
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.3284 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.5616/9.4807/17.8432 | Accumulated DP eps=0.4977
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.3196 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.5653/9.2879/17.1832 | Accumulated DP eps=0.5402
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.3072 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.4883/9.4537/16.6602 | Accumulated DP eps=0.5801
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.2796 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.4069/9.2890/18.4019 | Accumulated DP eps=0.6177
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.2979 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.4671/9.3194/16.4553 | Accumulated DP eps=0.6535
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 20 | Final EMA decay: 0.70000
+  L2 distance of released (EMA) weights from init: 1.097947
+  L2 distance of live weights from init:           1.104916
+  Flow loss comparison: Live model = 1.3223 vs EMA model = 1.3176
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.753500 (Target: 0.7535)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.804422
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.653500
+  DP-SGD RDP       (without Laplace):         0.704422
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.2979 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 614 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (614, 9)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (614, 9)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([614, 9])
+[Stage 3] DCGB complete. Graph: 9 nodes, 3 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 3 edges (pruned 33).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (9 dims).
+[Stage 6 VelocityNet] Parameters: 86,300 | Flow sigma: 21.1735 | noise/clip = sigma*sqrt(p)/B: 12.148669
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=512, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.4635 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=10.2291/10.1199/18.4197 | Accumulated DP eps=0.1952
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.3844 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.9765/9.9305/18.3600 | Accumulated DP eps=0.2792
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.3210 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.7574/9.5550/16.9445 | Accumulated DP eps=0.3452
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.3345 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.8050/9.8279/17.4214 | Accumulated DP eps=0.4016
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.3216 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.7996/9.7687/16.6325 | Accumulated DP eps=0.4519
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.2861 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.6828/9.5237/18.1353 | Accumulated DP eps=0.4977
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.2519 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.5545/9.5256/16.3124 | Accumulated DP eps=0.5402
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.2736 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.6389/9.5340/16.4486 | Accumulated DP eps=0.5801
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.2623 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.5384/9.4340/17.6773 | Accumulated DP eps=0.6177
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.2786 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.6480/9.5906/18.6304 | Accumulated DP eps=0.6535
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 20 | Final EMA decay: 0.70000
+  L2 distance of released (EMA) weights from init: 1.098644
+  L2 distance of live weights from init:           1.105709
+  Flow loss comparison: Live model = 1.2880 vs EMA model = 1.2714
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.753500 (Target: 0.7535)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.804422
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.653500
+  DP-SGD RDP       (without Laplace):         0.704422
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.2786 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 614 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (614, 9)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (614, 9)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([614, 9])
+[Stage 3] DCGB complete. Graph: 9 nodes, 3 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 3 edges (pruned 33).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (9 dims).
+[Stage 6 VelocityNet] Parameters: 86,300 | Flow sigma: 21.1735 | noise/clip = sigma*sqrt(p)/B: 12.148669
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=512, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.4511 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.9057/9.7998/17.2767 | Accumulated DP eps=0.1952
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.4113 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.7407/9.8118/18.4303 | Accumulated DP eps=0.2792
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.4096 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.7532/9.6300/16.8542 | Accumulated DP eps=0.3452
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.3689 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.6473/9.6976/16.6005 | Accumulated DP eps=0.4016
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.3523 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.5887/9.4652/17.7304 | Accumulated DP eps=0.4519
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.2973 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.3992/9.3379/16.1920 | Accumulated DP eps=0.4977
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.2990 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.4562/9.3734/18.2715 | Accumulated DP eps=0.5402
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.2933 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.3849/9.2038/16.6533 | Accumulated DP eps=0.5801
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.2701 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.3028/9.1789/19.0931 | Accumulated DP eps=0.6177
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.2508 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=9.2360/9.1626/18.0705 | Accumulated DP eps=0.6535
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 20 | Final EMA decay: 0.70000
+  L2 distance of released (EMA) weights from init: 1.092984
+  L2 distance of live weights from init:           1.099956
+  Flow loss comparison: Live model = 1.3558 vs EMA model = 1.2297
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.753500 (Target: 0.7535)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.804422
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.653500
+  DP-SGD RDP       (without Laplace):         0.704422
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.2508 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 614 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (614, 9)
+      Done: TSTR AUC 0.472 +- 0.065 (TRTR AUC 0.812)
+
+[2/4] BENCHMARK DATASET: Breast Cancer Wisconsin (High-Dimensional 31-D)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (455, 31)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([455, 31])
+[Stage 3] DCGB complete. Graph: 31 nodes, 30 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 30 edges (pruned 435).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (31 dims).
+[Stage 6 VelocityNet] Parameters: 91,998 | Flow sigma: 18.9159 | noise/clip = sigma*sqrt(p)/B: 12.609731
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=455, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.4168 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4507/5.4269/7.4679 | Accumulated DP eps=0.1833
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.4145 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4511/5.4070/7.9897 | Accumulated DP eps=0.2626
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.3911 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.3929/5.3454/7.8263 | Accumulated DP eps=0.3248
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.3736 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.3772/5.3835/7.5229 | Accumulated DP eps=0.3781
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.3465 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.3114/5.2580/8.0232 | Accumulated DP eps=0.4256
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.3620 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.3405/5.2915/7.5882 | Accumulated DP eps=0.4689
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.3676 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.3548/5.3606/7.6232 | Accumulated DP eps=0.5090
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.3487 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.3572/5.3079/7.8270 | Accumulated DP eps=0.5466
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.3435 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.3222/5.3284/6.9683 | Accumulated DP eps=0.5821
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.3473 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.3379/5.3195/7.6149 | Accumulated DP eps=0.6159
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 10 | Final EMA decay: 0.55000
+  L2 distance of released (EMA) weights from init: 0.788866
+  L2 distance of live weights from init:           0.797487
+  Flow loss comparison: Live model = 1.3264 vs EMA model = 1.3613
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.715900 (Target: 0.7159)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.763217
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.615900
+  DP-SGD RDP       (without Laplace):         0.663217
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.3473 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 455 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (455, 31)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (455, 31)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([455, 31])
+[Stage 3] DCGB complete. Graph: 31 nodes, 30 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 30 edges (pruned 435).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (31 dims).
+[Stage 6 VelocityNet] Parameters: 91,998 | Flow sigma: 18.9159 | noise/clip = sigma*sqrt(p)/B: 12.609731
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=455, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.4172 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.5938/5.6045/8.5429 | Accumulated DP eps=0.1833
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.4067 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.5619/5.5278/7.6530 | Accumulated DP eps=0.2626
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.3515 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4473/5.4061/7.9387 | Accumulated DP eps=0.3248
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.3655 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4942/5.4405/7.6070 | Accumulated DP eps=0.3781
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.3766 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.5276/5.5188/7.5382 | Accumulated DP eps=0.4256
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.3691 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.5148/5.4555/7.8076 | Accumulated DP eps=0.4689
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.3426 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4656/5.4175/8.0817 | Accumulated DP eps=0.5090
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.3185 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4221/5.4167/7.2783 | Accumulated DP eps=0.5466
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.3315 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4219/5.4135/7.6934 | Accumulated DP eps=0.5821
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.3134 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4113/5.3771/7.9324 | Accumulated DP eps=0.6159
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 10 | Final EMA decay: 0.55000
+  L2 distance of released (EMA) weights from init: 0.790127
+  L2 distance of live weights from init:           0.798766
+  Flow loss comparison: Live model = 1.3251 vs EMA model = 1.3307
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.715900 (Target: 0.7159)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.763217
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.615900
+  DP-SGD RDP       (without Laplace):         0.663217
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.3134 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 455 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (455, 31)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (455, 31)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([455, 31])
+[Stage 3] DCGB complete. Graph: 31 nodes, 30 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 30 edges (pruned 435).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (31 dims).
+[Stage 6 VelocityNet] Parameters: 91,998 | Flow sigma: 18.9159 | noise/clip = sigma*sqrt(p)/B: 12.609731
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=455, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.3934 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.6504/5.6059/7.9859 | Accumulated DP eps=0.1833
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.4071 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.7028/5.6846/8.3378 | Accumulated DP eps=0.2626
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.4020 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.6702/5.6095/8.3155 | Accumulated DP eps=0.3248
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.3765 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.6433/5.6842/7.8761 | Accumulated DP eps=0.3781
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.3541 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.6129/5.5987/7.6873 | Accumulated DP eps=0.4256
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.3485 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.5823/5.5652/7.9583 | Accumulated DP eps=0.4689
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.3402 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.5768/5.6057/7.8115 | Accumulated DP eps=0.5090
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.3442 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.5682/5.5594/8.4568 | Accumulated DP eps=0.5466
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.3338 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.5569/5.5457/7.9773 | Accumulated DP eps=0.5821
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.3217 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.5489/5.5568/7.7222 | Accumulated DP eps=0.6159
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 10 | Final EMA decay: 0.55000
+  L2 distance of released (EMA) weights from init: 0.788856
+  L2 distance of live weights from init:           0.797506
+  Flow loss comparison: Live model = 1.3244 vs EMA model = 1.3397
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.715900 (Target: 0.7159)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.763217
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.615900
+  DP-SGD RDP       (without Laplace):         0.663217
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.3217 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 455 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (455, 31)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (455, 31)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([455, 31])
+[Stage 3] DCGB complete. Graph: 31 nodes, 30 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 30 edges (pruned 435).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (31 dims).
+[Stage 6 VelocityNet] Parameters: 91,998 | Flow sigma: 18.9159 | noise/clip = sigma*sqrt(p)/B: 12.609731
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=455, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.3833 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4041/5.4249/7.5131 | Accumulated DP eps=0.1833
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.3942 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4221/5.4067/7.9116 | Accumulated DP eps=0.2626
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.4013 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4529/5.3969/8.1488 | Accumulated DP eps=0.3248
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.3720 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.3827/5.3775/8.0192 | Accumulated DP eps=0.3781
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.3606 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.3605/5.3512/7.4166 | Accumulated DP eps=0.4256
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.3166 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.2771/5.2957/7.7934 | Accumulated DP eps=0.4689
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.3916 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4321/5.4236/7.8922 | Accumulated DP eps=0.5090
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.3435 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.3315/5.2576/7.5725 | Accumulated DP eps=0.5466
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.3291 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.3030/5.2460/7.7285 | Accumulated DP eps=0.5821
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.3434 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.3487/5.3038/8.6061 | Accumulated DP eps=0.6159
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 10 | Final EMA decay: 0.55000
+  L2 distance of released (EMA) weights from init: 0.789096
+  L2 distance of live weights from init:           0.797735
+  Flow loss comparison: Live model = 1.3570 vs EMA model = 1.3507
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.715900 (Target: 0.7159)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.763217
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.615900
+  DP-SGD RDP       (without Laplace):         0.663217
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.3434 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 455 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (455, 31)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (455, 31)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([455, 31])
+[Stage 3] DCGB complete. Graph: 31 nodes, 30 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 30 edges (pruned 435).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (31 dims).
+[Stage 6 VelocityNet] Parameters: 91,998 | Flow sigma: 18.9159 | noise/clip = sigma*sqrt(p)/B: 12.609731
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=455, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.4483 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.5780/5.5838/7.4575 | Accumulated DP eps=0.1833
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.4166 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.5222/5.4577/7.9602 | Accumulated DP eps=0.2626
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.3600 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4238/5.4355/7.8972 | Accumulated DP eps=0.3248
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.4017 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4836/5.3859/7.9037 | Accumulated DP eps=0.3781
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.3844 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4812/5.4590/7.8875 | Accumulated DP eps=0.4256
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.3801 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4553/5.4440/7.7743 | Accumulated DP eps=0.4689
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.3380 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.3826/5.3541/7.6137 | Accumulated DP eps=0.5090
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.3606 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4174/5.3753/7.6134 | Accumulated DP eps=0.5466
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.3504 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4118/5.3945/7.5980 | Accumulated DP eps=0.5821
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.3798 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=5.4724/5.4440/7.9898 | Accumulated DP eps=0.6159
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 10 | Final EMA decay: 0.55000
+  L2 distance of released (EMA) weights from init: 0.786873
+  L2 distance of live weights from init:           0.795453
+  Flow loss comparison: Live model = 1.3501 vs EMA model = 1.3226
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.715900 (Target: 0.7159)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.763217
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.615900
+  DP-SGD RDP       (without Laplace):         0.663217
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.3798 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 455 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (455, 31)
+      Done: TSTR AUC 0.309 +- 0.152 (TRTR AUC 0.995)
+
+[3/4] BENCHMARK DATASET: Kaggle Bank Customer Churn (Heterogeneous Mixed-Type)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (1600, 11)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([1600, 16])
+[Stage 3] DCGB complete. Graph: 16 nodes, 25 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 25 edges (pruned 95).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (16 dims).
+[Stage 6 VelocityNet] Parameters: 88,113 | Flow sigma: 10.7301 | noise/clip = sigma*sqrt(p)/B: 6.220924
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=512, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.4325 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.6002/7.5875/11.9721 | Accumulated DP eps=0.2192
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.3866 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4846/7.3915/13.4301 | Accumulated DP eps=0.3103
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.3499 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.3995/7.3719/11.6409 | Accumulated DP eps=0.3817
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.3269 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.3697/7.3189/11.9545 | Accumulated DP eps=0.4428
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.3094 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.3342/7.3403/12.0450 | Accumulated DP eps=0.4972
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.2931 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2979/7.2159/11.1177 | Accumulated DP eps=0.5468
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.3068 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.3393/7.3016/12.0510 | Accumulated DP eps=0.5928
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.2865 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2936/7.2365/11.1165 | Accumulated DP eps=0.6359
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.2799 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2746/7.2567/11.7208 | Accumulated DP eps=0.6767
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.2934 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.3061/7.3207/12.2866 | Accumulated DP eps=0.7154
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 40 | Final EMA decay: 0.82000
+  L2 distance of released (EMA) weights from init: 1.527040
+  L2 distance of live weights from init:           1.533109
+  Flow loss comparison: Live model = 1.2990 vs EMA model = 1.2869
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.815400 (Target: 0.8154)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.873614
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.715400
+  DP-SGD RDP       (without Laplace):         0.773614
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.2934 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 1600 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (1600, 11)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (1600, 11)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([1600, 16])
+[Stage 3] DCGB complete. Graph: 16 nodes, 25 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 25 edges (pruned 95).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (16 dims).
+[Stage 6 VelocityNet] Parameters: 88,113 | Flow sigma: 10.7301 | noise/clip = sigma*sqrt(p)/B: 6.220924
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=512, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.4296 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.8090/7.7203/12.4617 | Accumulated DP eps=0.2192
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.3616 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.6542/7.5642/14.1760 | Accumulated DP eps=0.3103
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.3196 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5661/7.4984/12.3646 | Accumulated DP eps=0.3817
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.3181 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5733/7.5475/13.2985 | Accumulated DP eps=0.4428
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.3006 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5541/7.4985/12.4303 | Accumulated DP eps=0.4972
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.2804 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5056/7.4199/12.9592 | Accumulated DP eps=0.5468
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.2986 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5566/7.5155/11.8682 | Accumulated DP eps=0.5928
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.2883 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5411/7.4317/12.8668 | Accumulated DP eps=0.6359
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.2802 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4980/7.4347/12.0589 | Accumulated DP eps=0.6767
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.3022 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5656/7.5118/12.4923 | Accumulated DP eps=0.7154
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 40 | Final EMA decay: 0.82000
+  L2 distance of released (EMA) weights from init: 1.530373
+  L2 distance of live weights from init:           1.536258
+  Flow loss comparison: Live model = 1.3124 vs EMA model = 1.2950
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.815400 (Target: 0.8154)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.873614
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.715400
+  DP-SGD RDP       (without Laplace):         0.773614
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.3022 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 1600 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (1600, 11)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (1600, 11)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([1600, 16])
+[Stage 3] DCGB complete. Graph: 16 nodes, 25 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 25 edges (pruned 95).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (16 dims).
+[Stage 6 VelocityNet] Parameters: 88,113 | Flow sigma: 10.7301 | noise/clip = sigma*sqrt(p)/B: 6.220924
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=512, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.4438 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.7512/7.6484/12.5399 | Accumulated DP eps=0.2192
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.3738 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5849/7.5219/12.0429 | Accumulated DP eps=0.3103
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.3444 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5388/7.5500/12.0512 | Accumulated DP eps=0.3817
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.3302 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5037/7.4482/12.1890 | Accumulated DP eps=0.4428
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.3130 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4662/7.4254/12.7279 | Accumulated DP eps=0.4972
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.2851 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4080/7.3898/12.1540 | Accumulated DP eps=0.5468
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.2812 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.3974/7.3565/13.2240 | Accumulated DP eps=0.5928
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.2747 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.3712/7.3610/12.8528 | Accumulated DP eps=0.6359
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.2845 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4122/7.3700/11.7599 | Accumulated DP eps=0.6767
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.2774 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.3825/7.3075/12.6951 | Accumulated DP eps=0.7154
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 40 | Final EMA decay: 0.82000
+  L2 distance of released (EMA) weights from init: 1.527534
+  L2 distance of live weights from init:           1.533429
+  Flow loss comparison: Live model = 1.2366 vs EMA model = 1.3186
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.815400 (Target: 0.8154)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.873614
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.715400
+  DP-SGD RDP       (without Laplace):         0.773614
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.2774 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 1600 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (1600, 11)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (1600, 11)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([1600, 16])
+[Stage 3] DCGB complete. Graph: 16 nodes, 25 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 25 edges (pruned 95).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (16 dims).
+[Stage 6 VelocityNet] Parameters: 88,113 | Flow sigma: 10.7301 | noise/clip = sigma*sqrt(p)/B: 6.220924
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=512, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.4140 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.6963/7.6049/14.4262 | Accumulated DP eps=0.2192
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.3696 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.6021/7.5234/12.8291 | Accumulated DP eps=0.3103
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.3273 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4937/7.4691/12.9256 | Accumulated DP eps=0.3817
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.3240 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5260/7.4810/12.8769 | Accumulated DP eps=0.4428
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.3086 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4903/7.4491/13.4767 | Accumulated DP eps=0.4972
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.2980 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4618/7.4312/12.6958 | Accumulated DP eps=0.5468
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.2939 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4709/7.4523/11.7737 | Accumulated DP eps=0.5928
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.3037 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4972/7.4801/12.0675 | Accumulated DP eps=0.6359
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.2948 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4776/7.4346/12.1007 | Accumulated DP eps=0.6767
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.2890 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4705/7.4406/12.4978 | Accumulated DP eps=0.7154
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 40 | Final EMA decay: 0.82000
+  L2 distance of released (EMA) weights from init: 1.533086
+  L2 distance of live weights from init:           1.539128
+  Flow loss comparison: Live model = 1.2855 vs EMA model = 1.2904
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.815400 (Target: 0.8154)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.873614
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.715400
+  DP-SGD RDP       (without Laplace):         0.773614
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.2890 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 1600 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (1600, 11)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (1600, 11)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([1600, 16])
+[Stage 3] DCGB complete. Graph: 16 nodes, 25 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 25 edges (pruned 95).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (16 dims).
+[Stage 6 VelocityNet] Parameters: 88,113 | Flow sigma: 10.7301 | noise/clip = sigma*sqrt(p)/B: 6.220924
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=512, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.4326 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.8040/7.7687/11.7796 | Accumulated DP eps=0.2192
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.4008 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.7667/7.6851/13.7988 | Accumulated DP eps=0.3103
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.3724 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.7094/7.7068/12.2602 | Accumulated DP eps=0.3817
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.3313 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.6064/7.5581/13.2965 | Accumulated DP eps=0.4428
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.3002 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5217/7.4664/13.0927 | Accumulated DP eps=0.4972
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.3088 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5479/7.5142/12.8735 | Accumulated DP eps=0.5468
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.3014 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5495/7.4935/11.9969 | Accumulated DP eps=0.5928
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.2901 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5089/7.4789/12.9502 | Accumulated DP eps=0.6359
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.2648 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4521/7.4279/12.3211 | Accumulated DP eps=0.6767
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.2930 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5477/7.4897/12.3832 | Accumulated DP eps=0.7154
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 40 | Final EMA decay: 0.82000
+  L2 distance of released (EMA) weights from init: 1.523625
+  L2 distance of live weights from init:           1.529539
+  Flow loss comparison: Live model = 1.2755 vs EMA model = 1.2942
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.815400 (Target: 0.8154)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.873614
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.715400
+  DP-SGD RDP       (without Laplace):         0.773614
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.2930 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 1600 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (1600, 11)
+      Done: TSTR AUC 0.486 +- 0.052 (TRTR AUC 0.848)
+
+[4/4] BENCHMARK DATASET: Actuarial Healthcare & Medical Risk
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (1070, 7)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([1070, 15])
+[Stage 3] DCGB complete. Graph: 15 nodes, 47 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 47 edges (pruned 58).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (15 dims).
+[Stage 6 VelocityNet] Parameters: 87,854 | Flow sigma: 14.7714 | noise/clip = sigma*sqrt(p)/B: 8.551322
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=512, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.3033 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5992/7.5580/12.1055 | Accumulated DP eps=0.2016
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.2738 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5352/7.4492/12.3692 | Accumulated DP eps=0.2867
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.2478 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4593/7.3718/12.4542 | Accumulated DP eps=0.3533
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.2315 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4269/7.3574/12.5494 | Accumulated DP eps=0.4103
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.2091 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.3631/7.3869/12.0922 | Accumulated DP eps=0.4611
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.1940 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.3402/7.2791/11.8107 | Accumulated DP eps=0.5075
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.1906 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.3221/7.2741/12.6380 | Accumulated DP eps=0.5504
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.1804 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2686/7.2450/11.6398 | Accumulated DP eps=0.5906
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.1790 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2710/7.2382/12.5021 | Accumulated DP eps=0.6287
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.1767 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2791/7.2423/13.3010 | Accumulated DP eps=0.6648
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 30 | Final EMA decay: 0.77500
+  L2 distance of released (EMA) weights from init: 1.340186
+  L2 distance of live weights from init:           1.346579
+  Flow loss comparison: Live model = 1.1748 vs EMA model = 1.1729
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.764800 (Target: 0.7648)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.817752
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.664800
+  DP-SGD RDP       (without Laplace):         0.717752
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.1767 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 1070 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (1070, 7)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (1070, 7)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([1070, 15])
+[Stage 3] DCGB complete. Graph: 15 nodes, 47 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 47 edges (pruned 58).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (15 dims).
+[Stage 6 VelocityNet] Parameters: 87,854 | Flow sigma: 14.7714 | noise/clip = sigma*sqrt(p)/B: 8.551322
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=512, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.2779 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4154/7.4322/12.5497 | Accumulated DP eps=0.2016
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.2351 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2860/7.2073/12.7028 | Accumulated DP eps=0.2867
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.2320 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2929/7.2615/12.1496 | Accumulated DP eps=0.3533
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.2193 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2827/7.2321/12.6459 | Accumulated DP eps=0.4103
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.2026 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2453/7.1860/12.1651 | Accumulated DP eps=0.4611
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.2084 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2785/7.2316/12.5131 | Accumulated DP eps=0.5075
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.1898 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2268/7.1504/11.7555 | Accumulated DP eps=0.5504
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.1653 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.1409/7.1084/11.9412 | Accumulated DP eps=0.5906
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.1957 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2346/7.2158/12.6800 | Accumulated DP eps=0.6287
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.1905 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2244/7.1775/11.9581 | Accumulated DP eps=0.6648
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 30 | Final EMA decay: 0.77500
+  L2 distance of released (EMA) weights from init: 1.344010
+  L2 distance of live weights from init:           1.350391
+  Flow loss comparison: Live model = 1.2269 vs EMA model = 1.2011
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.764800 (Target: 0.7648)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.817752
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.664800
+  DP-SGD RDP       (without Laplace):         0.717752
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.1905 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 1070 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (1070, 7)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (1070, 7)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([1070, 15])
+[Stage 3] DCGB complete. Graph: 15 nodes, 47 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 47 edges (pruned 58).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (15 dims).
+[Stage 6 VelocityNet] Parameters: 87,854 | Flow sigma: 14.7714 | noise/clip = sigma*sqrt(p)/B: 8.551322
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=512, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.3119 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4107/7.3719/11.8831 | Accumulated DP eps=0.2016
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.2948 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.3711/7.2563/11.9324 | Accumulated DP eps=0.2867
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.2508 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2974/7.2970/11.9586 | Accumulated DP eps=0.3533
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.2144 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.1975/7.1297/13.2159 | Accumulated DP eps=0.4103
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.2059 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.1998/7.1455/11.9517 | Accumulated DP eps=0.4611
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.2060 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2086/7.1876/12.0668 | Accumulated DP eps=0.5075
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.1588 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.0811/7.0716/11.7126 | Accumulated DP eps=0.5504
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.1631 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.0940/7.0298/11.4602 | Accumulated DP eps=0.5906
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.1838 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.1542/7.1164/11.5341 | Accumulated DP eps=0.6287
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.1650 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.0935/7.0692/12.2044 | Accumulated DP eps=0.6648
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 30 | Final EMA decay: 0.77500
+  L2 distance of released (EMA) weights from init: 1.341965
+  L2 distance of live weights from init:           1.348278
+  Flow loss comparison: Live model = 1.1678 vs EMA model = 1.1533
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.764800 (Target: 0.7648)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.817752
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.664800
+  DP-SGD RDP       (without Laplace):         0.717752
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.1650 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 1070 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (1070, 7)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (1070, 7)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([1070, 15])
+[Stage 3] DCGB complete. Graph: 15 nodes, 47 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 47 edges (pruned 58).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (15 dims).
+[Stage 6 VelocityNet] Parameters: 87,854 | Flow sigma: 14.7714 | noise/clip = sigma*sqrt(p)/B: 8.551322
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=512, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.2751 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.6697/7.6624/12.2188 | Accumulated DP eps=0.2016
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.2728 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.6624/7.5734/13.0222 | Accumulated DP eps=0.2867
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.2522 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5967/7.5331/12.7604 | Accumulated DP eps=0.3533
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.2256 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5284/7.4783/12.8847 | Accumulated DP eps=0.4103
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.1904 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4285/7.3595/11.3120 | Accumulated DP eps=0.4611
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.2111 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4970/7.4967/12.2580 | Accumulated DP eps=0.5075
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.1777 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4251/7.4092/12.2922 | Accumulated DP eps=0.5504
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.1736 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4117/7.3885/12.1494 | Accumulated DP eps=0.5906
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.1899 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4607/7.4304/11.5708 | Accumulated DP eps=0.6287
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.1961 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4550/7.3855/12.7949 | Accumulated DP eps=0.6648
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 30 | Final EMA decay: 0.77500
+  L2 distance of released (EMA) weights from init: 1.344749
+  L2 distance of live weights from init:           1.351233
+  Flow loss comparison: Live model = 1.1776 vs EMA model = 1.1289
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.764800 (Target: 0.7648)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.817752
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.664800
+  DP-SGD RDP       (without Laplace):         0.717752
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.1961 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 1070 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (1070, 7)
+[ACFM-Net L-OTFM] GPU detected: NVIDIA GeForce RTX 4060 Ti (8.6 GB VRAM). Batch size set to 512.
+[Stage 0] Dataset shape entering pipeline: (1070, 7)
+[Stage 1] UDIE complete. Inferred task: classification
+[Stage 2] ADPE complete. Encoded shape: torch.Size([1070, 15])
+[Stage 3] DCGB complete. Graph: 15 nodes, 47 edges.
+[Stage 3b] DCGB Refinement complete. Graph: 47 edges (pruned 58).
+[Stage 4] Latent mode is 'identity': bypassing HVAE. Flow trains directly in X_scaled (15 dims).
+[Stage 6 VelocityNet] Parameters: 87,854 | Flow sigma: 14.7714 | noise/clip = sigma*sqrt(p)/B: 8.551322
+[Stage 6 Baseline] Standardized Zero-predictor baseline: 2.0000 (2.0000 for N(0,I)) | Gaussian floor: 1.5708 (pi/2)
+=== STAGE 8: Flow Training (I-CFM) -- 10 epochs, batch=512, device=cuda ===
+  [Stage 8 Flow] Epoch   1/10 | Flow Loss=1.2886 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5307/7.4662/12.5183 | Accumulated DP eps=0.2016
+  [Stage 8 Flow] Epoch   2/10 | Flow Loss=1.2812 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.5139/7.4420/12.4997 | Accumulated DP eps=0.2867
+  [Stage 8 Flow] Epoch   3/10 | Flow Loss=1.2545 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.4740/7.4239/12.5309 | Accumulated DP eps=0.3533
+  [Stage 8 Flow] Epoch   4/10 | Flow Loss=1.2117 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.3541/7.2679/12.2886 | Accumulated DP eps=0.4103
+  [Stage 8 Flow] Epoch   5/10 | Flow Loss=1.2201 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.3837/7.3827/11.6375 | Accumulated DP eps=0.4611
+  [Stage 8 Flow] Epoch   6/10 | Flow Loss=1.1976 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.3271/7.2702/13.2808 | Accumulated DP eps=0.5075
+  [Stage 8 Flow] Epoch   7/10 | Flow Loss=1.1999 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.3370/7.2528/11.7174 | Accumulated DP eps=0.5504
+  [Stage 8 Flow] Epoch   8/10 | Flow Loss=1.1819 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2989/7.2321/11.8616 | Accumulated DP eps=0.5906
+  [Stage 8 Flow] Epoch   9/10 | Flow Loss=1.1769 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.2819/7.1891/11.3883 | Accumulated DP eps=0.6287
+  [Stage 8 Flow] Epoch  10/10 | Flow Loss=1.2028 | Clipped Frac=100.00% | Grad Norm (mean/med/max)=7.3861/7.3584/12.7177 | Accumulated DP eps=0.6648
+
+[Stage 8 Flow Diagnostics (Gate 3b Item 1)]
+  EMA schedule: step-tied warm-up decay_t = min(0.999, (1 + step)/(10 + step))
+  Final EMA step count: 30 | Final EMA decay: 0.77500
+  L2 distance of released (EMA) weights from init: 1.337478
+  L2 distance of live weights from init:           1.343848
+  Flow loss comparison: Live model = 1.1979 vs EMA model = 1.2043
+
+
+====================== PRIVACY ACCOUNTING SUMMARY ======================
+  HEADLINE GUARANTEE: Opacus PRV Upper Bound (with Laplace charges): 0.764800 (Target: 0.7648)
+  FORMAL GUARANTEE:   RDP Upper Bound        (with Laplace charges): 0.817752
+  [Headline Designation]: Opacus PRV Upper Bound is the HEADLINE guarantee; RDP is the formal composition guarantee.
+  DP-SGD PRV Upper (without Laplace):         0.664800
+  DP-SGD RDP       (without Laplace):         0.717752
+  Laplace Non-Training Charges (Ledger):      0.100000
+========================================================================
+
+[Stage 8 Summary] Final flow loss: 1.2028 vs Zero-predictor baseline: 2.0000 (2.0000 if ~N(0,I)) vs Gaussian floor: 1.5708 (pi/2)
+[Inference] Generating 1070 synthetic patient samples via pure prior sampling z_0 ~ N(0, I) & RK4...
+[Done] Research-grade synthetic dataset generated: (1070, 7)
+      Done: TSTR R2 -4.135 +- 2.505 (TRTR R2 0.863)
+
+=====================================================================================
+                         SUMMARY OF STRESS TEST RESULTS
+=====================================================================================
+                                              Dataset  Rows(train)  Seeds               TSTR      TRTR       Corr Error        Mean DCR Exact Copy % Epsilon  Privacy Verified
+                       Pima Indians Diabetes (Kaggle)          614      5 AUC 0.472 +- 0.065 AUC 0.812 0.0232 +- 0.0005  4.717 +- 0.197        0.00%  0.7535              True
+      Breast Cancer Wisconsin (High-Dimensional 31-D)          455      5 AUC 0.309 +- 0.152 AUC 0.995 0.0150 +- 0.0000 13.277 +- 0.439        0.00%  0.7159              True
+Kaggle Bank Customer Churn (Heterogeneous Mixed-Type)         1600      5 AUC 0.486 +- 0.052 AUC 0.848 0.0097 +- 0.0002  2.619 +- 0.115        0.00%  0.8154              True
+                  Actuarial Healthcare & Medical Risk         1070      5 R2 -4.135 +- 2.505  R2 0.863 0.0298 +- 0.0022  1.508 +- 0.257        0.00%  0.7648              True
+
+Run complete. 'Privacy Verified' = accountant epsilon within DAPC budget; it says nothing about utility.
+=====================================================================================
+Saved complete stress test telemetry to C:\Users\sarat\Documents\Research\runs\hard_stress_test_results.json

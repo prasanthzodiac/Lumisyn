@@ -1,0 +1,18 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+frontend/node_modules/
+frontend/dist/
+.env
+.env.*
+!frontend/.env.example
+backend/sessions.db
+*.log
+
+# paper artifact: datasets are not redistributed (see README)
+data/*
+!data/schemas/
+.playwright-cli/
+artifacts/

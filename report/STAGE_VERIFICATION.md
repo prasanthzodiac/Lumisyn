@@ -1,5 +1,7 @@
 # Full-Stage Verification Report
 
+> **SUPERSEDED (2026-09-24).** This snapshot predates later fixes and is inaccurate in several places — do not cite it. Changes since: Stage 3b now feeds the flow network (no longer bypassed); DAPC epsilon selection is risk-adaptive from public metadata only; Stage 7b / dependency-matrix Laplace noise no longer uses a fixed public seed (which had made the noise subtractable); DP-SGD per-group clipping added for VAE mode; test count is 84. Current evidence for the core claim: `report/ICFM_SENSITIVITY_PROOF.md`.
+
 **Branch**: `stage-verification-pass` (branched off `fix-test-stages-pass`)  
 **Timestamp**: 2026-09-23T21:10:00+05:30  
 **Methodology**: Evidence-backed verification across all pipeline stages. Every claim is strictly classified as `VERIFIED-BY-RUNNING`, `VERIFIED-BY-READING`, or `NOT VERIFIED`. No new training sweeps were launched; all numbers are drawn directly from logged runs and fast unit tests (< 30s).

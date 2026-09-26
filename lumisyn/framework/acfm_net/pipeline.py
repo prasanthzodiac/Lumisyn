@@ -34,18 +34,14 @@ from acfm_net.privacy import (
     PrivacyLedger,
     public_schema_from_dataframe,
     sanitize_dependency_matrix,
-    sanitize_missing_summary,
 )
 from acfm_net.generative import (
     ContinuousOTCFM,
 )
 from acfm_net.repair import ConstrainedGradientRepairLoop
 from acfm_net.repair.constraint_repair import enforce_domain_constraints, enforce_public_domain_constraints
-from acfm_net.optimization import (
-    SlicedWassersteinDistance,
-    ParetoModelSelector,
-)
 from acfm_net.postprocessing.dp_recalibration import DPMarginalRecalibrator
+from acfm_net.postprocessing.conditional_marginals import ConditionalMarginals
 
 # Maximum number of columns allowed before auto-selecting top informative ones
 MAX_COLUMNS = 64
@@ -208,6 +204,9 @@ class ACFMNetV5Pipeline:
         public_schema: Optional[Dict[str, Any]] = None,
         enable_dp_recalibration: bool = False,
         recalibration_epsilon: float = 0.10,
+        conditional_marginals: Optional[Any] = None,
+        conditional_copula: str = "flow",
+        noise_multiplicity: int = 1,
     ):
         if not strict_release_privacy and not allow_nonprivate_debug:
             raise ValueError(
@@ -234,6 +233,15 @@ class ACFMNetV5Pipeline:
         self.disable_gat = bool(disable_gat)
         # Gate 4c: latent mode & VAE stabilization flags
         self.latent_mode = str(latent_mode).lower()
+        if self.latent_mode != "identity":
+            import warnings
+            warnings.warn(
+                "latent_mode='vae' is experimental: under DP-SGD at eps~1 and N<~2k the HVAE "
+                "posterior collapses (shuffled/posterior MSE ratio ~1.0). Controlled tests ruled out "
+                "architecture (trains fine without DP), epoch count, and batch size as causes. "
+                "Use latent_mode='identity' (default) for releases.",
+                RuntimeWarning,
+            )
         self.logvar_init_bias = float(logvar_init_bias)
         self.deterministic_encoder = bool(deterministic_encoder)
         self.stage_split_ratio = stage_split_ratio
@@ -246,6 +254,10 @@ class ACFMNetV5Pipeline:
         self.prior_scale = float(prior_scale)
         self.enable_dp_recalibration = bool(enable_dp_recalibration)
         self.recalibration_epsilon = float(recalibration_epsilon)
+        # Stage 7c: None (off) | "adaptive" (DAPC split) | float share of the budget.
+        self.conditional_marginals = conditional_marginals
+        self.conditional_copula = conditional_copula
+        self.noise_multiplicity = int(noise_multiplicity)
 
         # -- GPU / Device detection --------------------------------------------
         if torch.cuda.is_available():
@@ -294,9 +306,6 @@ class ACFMNetV5Pipeline:
 
         # Stage 7: Repair Loop
         self.repair_loop = ConstrainedGradientRepairLoop()
-
-        # Stage 8: Optimization & Pareto Selection
-        self.model_selector = ParetoModelSelector(target_epsilon=target_epsilon)
 
     def _make_dataloader(self, X_tensor: torch.Tensor, batch_size: Optional[int] = None) -> data_utils.DataLoader:
         bs = batch_size or BATCH_SIZE
@@ -350,6 +359,11 @@ class ACFMNetV5Pipeline:
             "privacy_contract": {
                 "mode": "strict_public_schema" if self.strict_release_privacy else "training_only",
                 "public_schema_assumption": bool(self.strict_release_privacy),
+                # The DP guarantee covers only these outputs. Everything else in this report
+                # (loss / grad-norm / clip-fraction logs, row and missing-cell counts, the
+                # dataset-hash audit handle, diagnostics) is computed from private data without
+                # noise: operator-only, never publish it alongside the synthetic data.
+                "dp_covered_outputs": ["synthetic_data", "velocity_net weights", "privacy_summary"],
             },
         }
 
@@ -393,6 +407,25 @@ class ACFMNetV5Pipeline:
         # --------------------------------------------------------------------
         if public_schema is None:
             public_schema = self.public_schema if self.public_schema is not None else public_schema_from_dataframe(df_deidentified)
+        if self.strict_release_privacy:
+            # The encoder falls back to private min/max/kind/categories for anything the schema
+            # omits; such columns are outside the DP guarantee.
+            cols_spec = public_schema.get("columns", public_schema) if isinstance(public_schema, dict) else {}
+            incomplete = [
+                c for c in df_deidentified.columns
+                if c not in cols_spec
+                or "kind" not in cols_spec[c] and cols_spec[c].get("type") != "categorical"
+                or cols_spec[c].get("type") == "categorical" and not cols_spec[c].get("categories")
+                or cols_spec[c].get("type") != "categorical" and "bounds" not in cols_spec[c]
+            ]
+            if incomplete:
+                import warnings
+                warnings.warn(
+                    f"public_schema incomplete for {incomplete}: their encoding reads private data "
+                    "(min/max/kind/categories), which the DP guarantee does not cover.",
+                    RuntimeWarning,
+                )
+            report["privacy_contract"]["schema_incomplete_columns"] = incomplete
         report["privacy_contract"].update({
             "schema_source": "declared column schema and policy bounds",
             "schema_columns": len(public_schema),
@@ -418,12 +451,30 @@ class ACFMNetV5Pipeline:
             if self.strict_release_privacy
             else self.outlier_engine.analyze(df_sample)
         )
-        dep_info_raw = self.dependency_engine.analyze(df_sample)
-        dep_info = dep_info_raw
         privacy_ledger = PrivacyLedger(self.target_epsilon, self.target_delta)
-        if self.strict_release_privacy:
-            if not self.use_public_graph_only:
+        if self.strict_release_privacy and self.use_public_graph_only:
+            # Public-only graph (Gate 3b Item 7): Exact sensitivity under add/remove cannot
+            # be established for composite Spearman/mutual info/ANOVA statistics.
+            # The private dependency matrix is never computed in this path (not just
+            # discarded) — replaced outright with a public-only graph, charging 0 eps
+            # to the ledger and transferring the freed 0.08 epsilon entirely to DP-SGD.
+            dep_info = {
+                "columns": list(df_sample.columns),
+                "dependency_matrix": np.eye(len(df_sample.columns), dtype=np.float32),
+                "privacy_status": "public_only_graph",
+            }
+        else:
+            dep_info_raw = self.dependency_engine.analyze(df_sample)
+            dep_info = dep_info_raw
+            if self.strict_release_privacy:
                 # Noised graph with Laplace noise (Gate 3b ablation mode)
+                import warnings
+                warnings.warn(
+                    "use_public_graph_only=False: the dependency-matrix Laplace mechanism assumes "
+                    "per-entry sensitivity 2/N, which is not established for Pearson/Spearman/ANOVA/"
+                    "Cramer's V. Its ledger charge is NOT a certified DP guarantee — ablation use only.",
+                    RuntimeWarning,
+                )
                 dep_info = {
                     **dep_info_raw,
                     "dependency_matrix": sanitize_dependency_matrix(
@@ -438,18 +489,9 @@ class ACFMNetV5Pipeline:
                     delta=self.target_delta * 0.05,
                     mechanism="bounded Laplace dependency matrix",
                 )
-            else:
-                # Public-only graph (Gate 3b Item 7): Exact sensitivity under add/remove cannot
-                # be established for composite Spearman/mutual info/ANOVA statistics.
-                # Replace noised graph with public-only graph, charging 0 eps to the ledger
-                # and transferring the freed 0.08 epsilon entirely to DP-SGD.
-                dep_info = {
-                    **dep_info_raw,
-                    "dependency_matrix": np.eye(len(df_sample.columns), dtype=np.float32),
-                    "privacy_status": "public_only_graph",
-                }
 
-        if self.enable_dp_recalibration:
+        use_7c = bool(self.conditional_marginals is not None and target_col and self.latent_mode == "identity")
+        if self.enable_dp_recalibration and not use_7c:
             privacy_ledger.add(
                 "marginal_recalibration",
                 epsilon=float(self.recalibration_epsilon),
@@ -471,7 +513,6 @@ class ACFMNetV5Pipeline:
             )
 
         S_vec = torch.tensor(sensitive_info["sensitivity_vector"], dtype=torch.float32, device=self.device)
-        I_fp  = torch.tensor(fingerprint_info["fingerprint"],      dtype=torch.float32, device=self.device)
         report["task_info"] = fingerprint_info.get("task_info", {})
         report["stages_completed"].append("Stage 1: UDIE Passed (Task-Type Inferred)")
         _record_stage(report, "1", "Universal dataset intelligence", "PASSED", {
@@ -554,7 +595,11 @@ class ACFMNetV5Pipeline:
         # --------------------------------------------------------------------
         # STAGE 3b: Post-Latent Graph Refinement
         # --------------------------------------------------------------------
-        G_refined, W_refined, ref_info = self.graph_refiner.refine_graph(G_0, W_0, X_bal)
+        # Cosine similarity over private rows is an un-noised statistic; it fed the flow's
+        # adjacency buffer and so the released model. Strict mode refines from public W_0 only.
+        G_refined, W_refined, ref_info = self.graph_refiner.refine_graph(
+            G_0, W_0, None if self.strict_release_privacy else X_bal
+        )
         report["stages_completed"].append("Stage 3b: Graph Refinement Completed")
         _record_stage(report, "3b", "Post-latent graph refinement", "PASSED", {
             "initial_edges": ref_info["initial_edges"],
@@ -570,20 +615,6 @@ class ACFMNetV5Pipeline:
         # Calibrate once using the actual DP-SGD batch rate and total step count.
         # This pre-flight must happen before either trainable component updates.
         # --------------------------------------------------------------------
-        cat_cols = [c for c in df_deidentified.columns if not pd.api.types.is_float_dtype(df_deidentified[c])]
-        if self.strict_release_privacy:
-            u_ratio = 0.0
-        elif cat_cols:
-            u_ratio = float(df_deidentified[cat_cols].drop_duplicates().shape[0] / max(1, len(df_deidentified))) * 0.1
-        else:
-            u_ratio = 0.02
-
-        dep_mat = dep_info.get("dependency_matrix", np.eye(d_enc))
-        if isinstance(dep_mat, np.ndarray) and dep_mat.shape[0] > 1:
-            off_diag = dep_mat[~np.eye(dep_mat.shape[0], dtype=bool)]
-            dep_s = float(np.max(np.abs(off_diag))) if len(off_diag) > 0 else 0.2
-        else:
-            dep_s = 0.2
         base_bs = self.configured_batch_size if self.configured_batch_size is not None else BATCH_SIZE
         actual_batch_size = min(base_bs, len(X_cpu))
         batches_per_epoch = max(1, math.ceil(len(X_cpu) / actual_batch_size))
@@ -595,7 +626,14 @@ class ACFMNetV5Pipeline:
             flow_steps_planned = epochs * flow_batches_per_epoch
             total_dp_steps = flow_steps_planned
         else:
-            representation_epochs = max(5, epochs // 2)
+            # `epochs // 2` was an arbitrary heuristic (never empirically justified) that
+            # left HVAE badly undertrained: direct non-DP measurement shows this
+            # architecture needs on the order of 100 epochs to converge (posterior_mse
+            # drops from 2.08 to 0.002 between epoch 1 and 100 on Pima, 768 rows), while
+            # the old formula gave it only 5 for a typical epochs=10 flow run. DP-SGD's
+            # accountant already recalibrates sigma for whatever step count results here,
+            # so this doesn't change eps_hvae_target — only how much of it converges.
+            representation_epochs = max(60, epochs * 6)
             hvae_steps_planned = representation_epochs * batches_per_epoch
             flow_steps_planned = epochs * flow_batches_per_epoch
             total_dp_steps = hvae_steps_planned + flow_steps_planned
@@ -606,10 +644,7 @@ class ACFMNetV5Pipeline:
             sensitivity_vector=S_vec,
             num_samples=len(df_deidentified),
             num_features=d_enc,
-            reid_risk=cert.re_id_risk,
-            unique_ratio=u_ratio,
-            dep_score=dep_s,
-            is_high_stakes=(target_col and any(k in target_col.lower() for k in ["mortality", "death", "cancer", "icu"])),
+            is_high_stakes=bool(target_col and any(k in target_col.lower() for k in ["mortality", "death", "cancer", "icu"])),
             dataset_name=protocol_id,
             sample_rate=actual_sample_rate,
             steps=total_dp_steps,
@@ -617,19 +652,27 @@ class ACFMNetV5Pipeline:
 
         adaptive_target_eps = float(dapc_cert["selected_target_epsilon"])
         self.prv_accountant.set_target_epsilon(adaptive_target_eps)
-        # Note: DAPC safety gating evaluates only public cohort size (n >= 100), feature count,
-        # and public schema bounds. No private data is consumed for budget decision;
-        # zero Laplace charge is needed for dapc_risk_selection, freeing budget for DP-SGD.
+        # DAPC reads only public metadata (rounded n, d, declared column sensitivity,
+        # target-name flag), so it needs no ledger charge.
         nontraining_epsilon = privacy_ledger.epsilon
         training_target_eps = max(0.05, adaptive_target_eps - nontraining_epsilon)
         training_delta = self.target_delta * 0.80 if self.strict_release_privacy else self.target_delta
         self.prv_accountant.target_delta = training_delta
-        feature_scales, noise_scales, privacy_info = self.budget_allocator(
-            S_vec,
-            I_fp,
-            sample_rate=actual_sample_rate,
-            steps=total_dp_steps,
-        )
+
+        cond_marg, cm_noise = None, None
+        if use_7c:
+            cols_spec = public_schema.get("columns", public_schema)
+            cond_marg = ConditionalMarginals(cols_spec, target_col, list(df_deidentified.columns))
+            share = None if self.conditional_marginals == "adaptive" else float(self.conditional_marginals)
+            cm_noise = self.budget_allocator.marginal_noise_multiplier(
+                num_samples=len(X_cpu),
+                cells_per_table=cond_marg.max_cells,
+                num_tables=cond_marg.num_tables,
+                total_epsilon=training_target_eps,
+                delta=training_delta,
+                share=share,
+            )
+        extra_history = ((cm_noise, 1.0, 1),) if cm_noise is not None else ()
 
         if self.latent_mode == "identity":
             actual_sigma = self.budget_allocator.calibrate_noise_multiplier_accountant(
@@ -637,6 +680,7 @@ class ACFMNetV5Pipeline:
                 sample_rate=actual_sample_rate,
                 steps=total_dp_steps,
                 delta=training_delta,
+                extra_history=extra_history,
             )
             actual_sigma_hvae = None
             actual_sigma_flow = actual_sigma
@@ -664,6 +708,16 @@ class ACFMNetV5Pipeline:
             )
             actual_sigma = actual_sigma_flow
 
+        if cm_noise is not None:
+            # Stage 7c is composed with DP-SGD in the same PRV accountant (one Gaussian release).
+            self.prv_accountant.step(noise_multiplier=cm_noise, sample_rate=1.0, steps=1)
+            dapc_cert["conditional_marginals"] = {
+                "mode": "adaptive" if self.conditional_marginals == "adaptive" else f"fixed share {self.conditional_marginals}",
+                "noise_multiplier": round(float(cm_noise), 6),
+                "epsilon_alone": round(float(self.prv_accountant.compute_epsilon(cm_noise, 1.0, 1)), 6),
+                "num_tables": cond_marg.num_tables,
+                "max_cells_per_table": cond_marg.max_cells,
+            }
         dapc_cert["training_budget_eps_sgd"] = round(training_target_eps, 6)
         dapc_cert["calibrated_noise_multiplier_sigma"] = round(actual_sigma, 6)
 
@@ -755,10 +809,27 @@ class ACFMNetV5Pipeline:
             cross_attn = GatedCrossAttention(feature_dim=in_dim, graph_dim=64, hidden_dim=64).to(self.device)
             adj_matrix = torch.tensor(W_0, dtype=torch.float32, device=self.device)
             # Pretrain Latent VAE on dataset representation
+            encoder_params = (
+                list(hvae.encoder_backbone.parameters())
+                + list(hvae.fc_mu_g.parameters())
+                + list(hvae.fc_logvar_g.parameters())
+                + list(hvae.group_heads.parameters())
+            )
             if self.disable_gat:
                 representation_model = hvae
             else:
                 representation_model = nn.ModuleList([gat, cross_attn, hvae])
+                encoder_params = list(gat.parameters()) + list(cross_attn.parameters()) + encoder_params
+            decoder_params = list(hvae.decoder.parameters())
+            # Per-group DP-SGD clipping (audit_out/privacy_proof_per_group_clipping.md):
+            # the encoder's naturally small gradients were being submerged under noise
+            # scaled to a single global clip dominated by the decoder — the documented
+            # cause of posterior collapse under DP. Splitting into two equal-budget
+            # groups keeps the SAME effective sensitivity (max_grad_norm_hvae) and thus
+            # the SAME accountant/epsilon math, while giving the encoder its own budget.
+            vae_param_groups = {"encoder": encoder_params, "decoder": decoder_params}
+            vae_group_c = self.max_grad_norm_hvae / math.sqrt(2)
+            vae_group_max_norm = {"encoder": vae_group_c, "decoder": vae_group_c}
             vae_optimizer = torch.optim.AdamW(representation_model.parameters(), lr=2e-3, weight_decay=1e-5)
             dp_vae = DPSGDWrapper(
                 representation_model,
@@ -798,7 +869,9 @@ class ACFMNetV5Pipeline:
                 for (X_batch,) in dataloader:
                     if len(X_batch) == 0:
                         # Match Opacus: empty Poisson draw is stepped with pure Gaussian noise and counted in accounting
-                        loss_vae = dp_vae.step_microbatch(torch.zeros(0, device=self.device))
+                        loss_vae = dp_vae.step_microbatch_grouped(
+                            torch.zeros(0, device=self.device), vae_param_groups, vae_group_max_norm
+                        )
                     else:
                         X_batch = X_batch.to(self.device, non_blocking=True)
                         if self.disable_gat:
@@ -809,7 +882,9 @@ class ACFMNetV5Pipeline:
                             X_enc_in = cross_attn(X_batch, h_gat)
                         # HVAE reconstruction target is strictly the FIXED X_batch (X_scaled)
                         vae_out = hvae(X_enc_in, target=X_batch, epoch=v_ep)
-                        loss_vae = dp_vae.step_microbatch(vae_out["per_sample_loss"])
+                        loss_vae = dp_vae.step_microbatch_grouped(
+                            vae_out["per_sample_loss"], vae_param_groups, vae_group_max_norm
+                        )
                         ep_recon += float(vae_out["recon_loss"].item())
                         ep_kl += float(vae_out["kl_loss"].item())
                         ep_clipped_frac += float(dp_vae.last_fraction_clipped)
@@ -1021,6 +1096,7 @@ class ACFMNetV5Pipeline:
                         use_ot_coupling=self.use_ot_coupling,
                         return_per_sample=True,
                         allow_nonprivate_ot=self.allow_nonprivate_ot,
+                        noise_multiplicity=self.noise_multiplicity,
                     )
                     loss_flow = dp_flow.step_microbatch(per_sample_flow_loss)
                     ep_flow_clipped_frac += float(dp_flow.last_fraction_clipped)
@@ -1064,11 +1140,11 @@ class ACFMNetV5Pipeline:
         # and report L2 distance of released weights from initialization.
         with torch.no_grad():
             eval_z_batch = next(iter(latent_loader))[0].to(self.device)
-            live_flow_loss = float(ot_cfm.compute_loss(eval_z_batch, use_ot_coupling=self.use_ot_coupling).item())
+            live_flow_loss = float(ot_cfm.compute_loss(eval_z_batch, use_ot_coupling=self.use_ot_coupling, allow_nonprivate_ot=self.allow_nonprivate_ot).item())
             
             live_weights_state = {k: v.clone() for k, v in ot_cfm.velocity_net.state_dict().items()}
             flow_ema.apply_to(ot_cfm.velocity_net)
-            ema_flow_loss = float(ot_cfm.compute_loss(eval_z_batch, use_ot_coupling=self.use_ot_coupling).item())
+            ema_flow_loss = float(ot_cfm.compute_loss(eval_z_batch, use_ot_coupling=self.use_ot_coupling, allow_nonprivate_ot=self.allow_nonprivate_ot).item())
             
             l2_dist_ema = flow_ema.compute_l2_from_init()
             l2_dist_live = flow_ema.compute_l2_from_init(live_weights_state)
@@ -1342,13 +1418,19 @@ class ACFMNetV5Pipeline:
         if orig_cols:
             df_synthetic = df_synthetic[orig_cols]
 
-        if self.enable_dp_recalibration:
+        if cond_marg is not None:
+            cm_report = cond_marg.release(df_deidentified, cm_noise)
+            df_synthetic = cond_marg.recalibrate(df_synthetic, copula=self.conditional_copula)
+            report["conditional_marginals"] = cm_report
+            _record_stage(report, "7c", "DP class-conditional marginals", "PASSED", cm_report)
+        if self.enable_dp_recalibration and cond_marg is None:  # 7c already fixes every 1-way marginal
             recalibrator = DPMarginalRecalibrator(public_schema)
+            # No seed: the Laplace noise must be unpredictable (see release_dp_histograms).
             dp_hists, recal_report = recalibrator.release_dp_histograms(
                 df_real=df_deidentified,
                 eps_m=self.recalibration_epsilon,
-                seed=42,
             )
+            # Seeding here is fine: recalibrate() only post-processes the already-DP histograms.
             df_synthetic = recalibrator.recalibrate(df_synthetic, dp_hists, seed=42)
             report["dp_recalibration"] = recal_report
             report["stages_completed"].append("Stage 7b: DP Marginal Recalibration Completed")

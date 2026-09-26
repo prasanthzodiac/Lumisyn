@@ -62,13 +62,15 @@ class DPMarginalRecalibrator:
         self,
         df_real: pd.DataFrame,
         eps_m: float,
-        seed: int = 42,
+        seed: Optional[int] = None,
     ) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         """
         Releases DP 1-way histograms for all columns under eps_m-DP.
+        seed must stay None for any real release: a fixed seed in public code makes the
+        Laplace noise a known constant an adversary can subtract. Pass an int only for tests.
         """
         assert eps_m > 0, "eps_m must be strictly positive"
-        rng = np.random.RandomState(seed)
+        rng = np.random.default_rng(seed)
         M = self.get_sensitivity()
         laplace_scale = float(M) / eps_m
 
@@ -92,7 +94,8 @@ class DPMarginalRecalibrator:
                     # Isolated special value 0.0 bin + log-spaced bins for positive values
                     zero_count = float(np.sum(vals == 0.0))
                     pos_vals = vals[vals > 0.0]
-                    lo_pos = max(1.0, float(np.min(pos_vals))) if len(pos_vals) > 0 else 1.0
+                    # Bin edges must be public: min(pos_vals) would leak the smallest private value.
+                    lo_pos = max(1.0, lo)
                     pos_bins = np.geomspace(lo_pos, hi, self.num_continuous_bins)
                     pos_counts, _ = np.histogram(pos_vals, bins=pos_bins)
                     
@@ -147,6 +150,7 @@ class DPMarginalRecalibrator:
                         "dp_counts": dp_counts,
                         "dp_probs": dp_probs,
                         "bounds": (lo, hi),
+                        "kind": spec.get("kind", "continuous"),
                     }
                     K_m = len(counts)
 
@@ -248,6 +252,15 @@ class DPMarginalRecalibrator:
                 # Invert CDF: interpolate
                 recal_vals = np.interp(u, cdf, bins)
                 recal_vals = np.clip(recal_vals, lo, hi)
+
+                # Discrete-valued columns (binary/count/integer) must land back on
+                # valid integers — the CDF interpolation above is continuous by
+                # construction and would otherwise silently turn e.g. a binary
+                # 0/1 column into arbitrary floats in [0, 1].
+                kind = hist.get("kind", "continuous")
+                if kind in ("binary", "binary_int", "count", "integer"):
+                    recal_vals = np.clip(np.round(recal_vals), lo, hi).astype(np.int64)
+
                 df_cal[col_name] = recal_vals
 
             elif hist["type"] == "categorical":

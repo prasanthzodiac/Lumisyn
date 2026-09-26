@@ -1,0 +1,5 @@
+.venv_baselines/
+.coverage
+__pycache__/
+.pytest_cache/
+runs/baselines/*.csv

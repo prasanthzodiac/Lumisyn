@@ -1,0 +1,41 @@
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\mbi\dataset.py:87: UserWarning: Pandas dataframe inputs are deprecated, please pass in a dictionary of numpy arrays instead.
+  warnings.warn(
+mst seed=0 done in 30.4s
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\mbi\dataset.py:87: UserWarning: Pandas dataframe inputs are deprecated, please pass in a dictionary of numpy arrays instead.
+  warnings.warn(
+mst seed=1 done in 12.6s
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\mbi\dataset.py:87: UserWarning: Pandas dataframe inputs are deprecated, please pass in a dictionary of numpy arrays instead.
+  warnings.warn(
+mst seed=2 done in 13.8s
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\mbi\dataset.py:87: UserWarning: Pandas dataframe inputs are deprecated, please pass in a dictionary of numpy arrays instead.
+  warnings.warn(
+15
+Initial Sigma 87.05131678115033
+aim seed=0 done in 126.8s
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\mbi\dataset.py:87: UserWarning: Pandas dataframe inputs are deprecated, please pass in a dictionary of numpy arrays instead.
+  warnings.warn(
+15
+Initial Sigma 87.05131678115033
+aim seed=1 done in 58.0s
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\mbi\dataset.py:87: UserWarning: Pandas dataframe inputs are deprecated, please pass in a dictionary of numpy arrays instead.
+  warnings.warn(
+15
+Initial Sigma 87.05131678115033
+aim seed=2 done in 75.9s
+Traceback (most recent call last):
+  File "C:\Users\sarat\Documents\Research\lumisyn\backend\baselines_gen.py", line 96, in <module>
+    main()
+  File "C:\Users\sarat\Documents\Research\lumisyn\backend\baselines_gen.py", line 85, in main
+    synth = Synthesizer.create(method, **METHODS[method])
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\snsynth\base.py", line 224, in create
+    synth_module = __import__(synth_module, fromlist=[synth_class])
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\snsynth\pytorch\nn\__init__.py", line 6, in <module>
+    from .dpctgan import DPCTGAN  # noqa
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\snsynth\pytorch\nn\dpctgan.py", line 24, in <module>
+    from .ctgan.ctgan import CTGANSynthesizer
+  File "C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\snsynth\pytorch\nn\ctgan\ctgan.py", line 7, in <module>
+    from packaging import version
+ModuleNotFoundError: No module named 'packaging'

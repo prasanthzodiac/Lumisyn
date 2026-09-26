@@ -1,0 +1,15 @@
+15
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\mbi\dataset.py:87: UserWarning: Pandas dataframe inputs are deprecated, please pass in a dictionary of numpy arrays instead.
+  warnings.warn(
+Initial Sigma 87.05131678115033
+aim_target seed=0 done in 64.1s
+15
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\mbi\dataset.py:87: UserWarning: Pandas dataframe inputs are deprecated, please pass in a dictionary of numpy arrays instead.
+  warnings.warn(
+Initial Sigma 87.05131678115033
+aim_target seed=1 done in 45.2s
+15
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\mbi\dataset.py:87: UserWarning: Pandas dataframe inputs are deprecated, please pass in a dictionary of numpy arrays instead.
+  warnings.warn(
+Initial Sigma 87.05131678115033
+aim_target seed=2 done in 53.8s

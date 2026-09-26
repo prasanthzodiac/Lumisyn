@@ -24,7 +24,8 @@ class PostLatentGraphRefiner:
         
         # Calculate latent feature-feature representation vectors by computing cosine similarity across samples
         # latent_Z shape: (batch_size, num_nodes) or (num_nodes, latent_dim_per_feature)
-        if latent_Z.ndim == 2:
+        # latent_Z=None: no data-dependent refinement (strict DP release path).
+        if latent_Z is not None and latent_Z.ndim == 2:
             if latent_Z.shape[1] == num_nodes:
                 # Features are columns (N, num_nodes) -> transpose to (num_nodes, N)
                 feature_latents = latent_Z.T

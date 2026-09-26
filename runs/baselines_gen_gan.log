@@ -1,0 +1,96 @@
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\opacus\privacy_engine.py:638: UserWarning: The sample rate will be defined from ``batch_size`` and ``sample_size``.The returned privacy budget will be incorrect.
+  warnings.warn(
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\opacus\privacy_engine.py:229: UserWarning: Secure RNG turned off. This is perfectly fine for experimentation as it allows for much faster training performance, but remember to turn it on and retrain one last time before production with ``secure_rng`` turned on.
+  warnings.warn(
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\torch\nn\modules\module.py:1874: FutureWarning: Using a non-full backward hook when the forward contains multiple autograd Nodes is deprecated and will be removed in future versions. This hook will be missing some grad_input. Please use register_full_backward_hook to get the documented behavior.
+  self._maybe_warn_non_full_backward_hook(args, result, grad_fn)
+Epoch 1, Loss G: 0.7167, Loss D: 1.3831
+epsilon is 0.10286725121127971, alpha is 63.0
+Epoch 2, Loss G: 0.7039, Loss D: 1.3815
+epsilon is 0.2221754237415526, alpha is 60.0
+Epoch 3, Loss G: 0.6960, Loss D: 1.3895
+epsilon is 0.3177071553582474, alpha is 45.0
+Epoch 4, Loss G: 0.6932, Loss D: 1.3879
+epsilon is 0.39253164380557565, alpha is 38.0
+Epoch 5, Loss G: 0.6955, Loss D: 1.3862
+epsilon is 0.456513568763271, alpha is 33.0
+Epoch 6, Loss G: 0.7001, Loss D: 1.3873
+epsilon is 0.5134266119819295, alpha is 30.0
+Epoch 7, Loss G: 0.7011, Loss D: 1.3882
+epsilon is 0.5652824605646277, alpha is 28.0
+Epoch 8, Loss G: 0.6990, Loss D: 1.3938
+epsilon is 0.6133768614084867, alpha is 26.0
+Epoch 9, Loss G: 0.7004, Loss D: 1.3956
+epsilon is 0.658429681970638, alpha is 25.0
+Epoch 10, Loss G: 0.7045, Loss D: 1.3905
+epsilon is 0.7011020436066654, alpha is 23.0
+dpctgan seed=0 done in 62.0s
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\opacus\privacy_engine.py:638: UserWarning: The sample rate will be defined from ``batch_size`` and ``sample_size``.The returned privacy budget will be incorrect.
+  warnings.warn(
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\opacus\privacy_engine.py:229: UserWarning: Secure RNG turned off. This is perfectly fine for experimentation as it allows for much faster training performance, but remember to turn it on and retrain one last time before production with ``secure_rng`` turned on.
+  warnings.warn(
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\torch\nn\modules\module.py:1874: FutureWarning: Using a non-full backward hook when the forward contains multiple autograd Nodes is deprecated and will be removed in future versions. This hook will be missing some grad_input. Please use register_full_backward_hook to get the documented behavior.
+  self._maybe_warn_non_full_backward_hook(args, result, grad_fn)
+Epoch 1, Loss G: 0.7181, Loss D: 1.3813
+epsilon is 0.10286725121127971, alpha is 63.0
+Epoch 2, Loss G: 0.7039, Loss D: 1.3839
+epsilon is 0.2221754237415526, alpha is 60.0
+Epoch 3, Loss G: 0.6954, Loss D: 1.3893
+epsilon is 0.3177071553582474, alpha is 45.0
+Epoch 4, Loss G: 0.6926, Loss D: 1.3884
+epsilon is 0.39253164380557565, alpha is 38.0
+Epoch 5, Loss G: 0.6967, Loss D: 1.3873
+epsilon is 0.456513568763271, alpha is 33.0
+Epoch 6, Loss G: 0.6966, Loss D: 1.3872
+epsilon is 0.5134266119819295, alpha is 30.0
+Epoch 7, Loss G: 0.6952, Loss D: 1.3887
+epsilon is 0.5652824605646277, alpha is 28.0
+Epoch 8, Loss G: 0.6965, Loss D: 1.3953
+epsilon is 0.6133768614084867, alpha is 26.0
+Epoch 9, Loss G: 0.7024, Loss D: 1.3897
+epsilon is 0.658429681970638, alpha is 25.0
+Epoch 10, Loss G: 0.7036, Loss D: 1.3888
+epsilon is 0.7011020436066654, alpha is 23.0
+dpctgan seed=1 done in 49.0s
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\opacus\privacy_engine.py:638: UserWarning: The sample rate will be defined from ``batch_size`` and ``sample_size``.The returned privacy budget will be incorrect.
+  warnings.warn(
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\opacus\privacy_engine.py:229: UserWarning: Secure RNG turned off. This is perfectly fine for experimentation as it allows for much faster training performance, but remember to turn it on and retrain one last time before production with ``secure_rng`` turned on.
+  warnings.warn(
+C:\Users\sarat\Documents\Research\.venv_baselines\Lib\site-packages\torch\nn\modules\module.py:1874: FutureWarning: Using a non-full backward hook when the forward contains multiple autograd Nodes is deprecated and will be removed in future versions. This hook will be missing some grad_input. Please use register_full_backward_hook to get the documented behavior.
+  self._maybe_warn_non_full_backward_hook(args, result, grad_fn)
+Epoch 1, Loss G: 0.7187, Loss D: 1.3836
+epsilon is 0.10286725121127971, alpha is 63.0
+Epoch 2, Loss G: 0.7061, Loss D: 1.3831
+epsilon is 0.2221754237415526, alpha is 60.0
+Epoch 3, Loss G: 0.6950, Loss D: 1.3860
+epsilon is 0.3177071553582474, alpha is 45.0
+Epoch 4, Loss G: 0.6944, Loss D: 1.3895
+epsilon is 0.39253164380557565, alpha is 38.0
+Epoch 5, Loss G: 0.6954, Loss D: 1.3890
+epsilon is 0.456513568763271, alpha is 33.0
+Epoch 6, Loss G: 0.6960, Loss D: 1.3878
+epsilon is 0.5134266119819295, alpha is 30.0
+Epoch 7, Loss G: 0.6970, Loss D: 1.3894
+epsilon is 0.5652824605646277, alpha is 28.0
+Epoch 8, Loss G: 0.6979, Loss D: 1.3912
+epsilon is 0.6133768614084867, alpha is 26.0
+Epoch 9, Loss G: 0.6988, Loss D: 1.3902
+epsilon is 0.658429681970638, alpha is 25.0
+Epoch 10, Loss G: 0.7009, Loss D: 1.3941
+epsilon is 0.7011020436066654, alpha is 23.0
+dpctgan seed=2 done in 28.5s
+using loss cross_entropy and regularization None
+eps: 0.115129 	 G: 5.099644 	 D: 1.538277
+eps: 0.484853 	 G: 7.322911 	 D: 2.576645
+eps: 0.688615 	 G: 8.638964 	 D: 3.433947
+patectgan seed=0 done in 7.3s
+using loss cross_entropy and regularization None
+eps: 0.115129 	 G: 4.806942 	 D: 1.433541
+eps: 0.484853 	 G: 7.147085 	 D: 2.297360
+eps: 0.688615 	 G: 8.506773 	 D: 2.961290
+patectgan seed=1 done in 7.2s
+using loss cross_entropy and regularization None
+eps: 0.115129 	 G: 4.814837 	 D: 1.424432
+eps: 0.484853 	 G: 7.118508 	 D: 2.462118
+eps: 0.688615 	 G: 8.452702 	 D: 3.005250
+patectgan seed=2 done in 7.2s

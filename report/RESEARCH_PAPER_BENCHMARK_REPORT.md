@@ -2,16 +2,16 @@
 
 **Authors:** Senior ML Research Engineer & DeepMind AI Research Partner  
 **Target Submission:** Machine Learning / Healthcare AI Conferences (NeurIPS / ICLR / CHIL / JMLR)  
-**Date:** September 23, 2026  
+**Date:** September 23, 2026 (benchmark numbers corrected same day — see Corrigendum, §6)  
 **Artifact Location:** `report/RESEARCH_PAPER_BENCHMARK_REPORT.md`  
 **Git Branch:** `stage-verification-pass`  
-**Test Suite Status:** 82/82 Passing (100% Pass Rate across `lumisyn/backend/tests`)
+**Test Suite Status:** 84/84 Passing (100% Pass Rate across `lumisyn/backend/tests`)
 
 ---
 
 ## Abstract
 
-Differentially private (DP) generative modeling of tabular healthcare and financial data is constrained by severe privacy-utility trade-offs. In this paper, we audit, remediate, and benchmark **L-OTFM (Latent Optimal Transport Continuous Flow Matching)** across four heterogeneous external benchmarks: Pima Indians Diabetes, Breast Cancer Wisconsin, Kaggle Bank Customer Churn, and Actuarial Medical Risk. We establish that mini-batch Kuhn-Munkres Optimal Transport coupling violates DP-SGD per-sample gradient sensitivity, and demonstrate that transitioning to **Independent Conditional Flow Matching (I-CFM)** restores strict gradient independence without loss of convergence. Furthermore, we identify an inherent **representation limit** in continuous Euclidean velocity fields when regressing high-cardinality discrete simplices, and introduce **Stage 7b: Differentially Private Marginal Recalibration**, a post-processing mechanism with global $L_1$ sensitivity $\Delta_1 = M$ under add/remove adjacency that composes within a unified privacy ledger. Across all four benchmarks, our remediated architecture achieves certified $(\varepsilon \le 1.0, \delta = 10^{-5})$ differential privacy, $0.00\%$ exact record memorization, bounded correlation Frobenius error ($0.0083 - 0.0343$), and robust post-latent graph topology.
+Differentially private (DP) generative modeling of tabular healthcare and financial data is constrained by severe privacy-utility trade-offs. In this paper, we audit, remediate, and benchmark **L-OTFM (Latent Optimal Transport Continuous Flow Matching)** across four heterogeneous external benchmarks: Pima Indians Diabetes, Breast Cancer Wisconsin, Kaggle Bank Customer Churn, and Actuarial Medical Risk. We establish that mini-batch Kuhn-Munkres Optimal Transport coupling violates DP-SGD per-sample gradient sensitivity, and demonstrate that transitioning to **Independent Conditional Flow Matching (I-CFM)** restores strict gradient independence without loss of convergence. Furthermore, we identify an inherent **representation limit** in continuous Euclidean velocity fields when regressing high-cardinality discrete simplices, and introduce **Stage 7b: Differentially Private Marginal Recalibration**, a post-processing mechanism with global $L_1$ sensitivity $\Delta_1 = M$ under add/remove adjacency that composes within a unified privacy ledger. All four benchmarks run within their accountant-verified budgets (headline $\varepsilon$ 0.72–0.82, $\delta = 10^{-5}$), but downstream utility at this $\varepsilon$ is near chance (TSTR AUC 0.19–0.58 vs. TRTR 0.81–0.99; regression $R^2 < 0$) — see §3, §7 (Corrigendum 2, privacy-mechanism defects fixed 2026-09-24) and `report/ICFM_SENSITIVITY_PROOF.md`, which now carries the paper's core claim.
 
 ---
 
@@ -71,25 +71,22 @@ All 10 stages of the pipeline have been tested and audited with empirical proof.
 
 ## 3. Multi-Dataset Hard Stress Benchmark Results
 
-We executed the full research-grade evaluation pipeline across 4 external datasets from Kaggle and clinical repositories. Every run completed under certified DP ($\varepsilon \le 1.0, \delta = 10^{-5}$) with Stage 7b DP recalibration enabled.
+Regenerated 2026-09-26 after the Stage 3b / 7b leak fixes (`PRIVACY_PROOF.md` §5). Settings: **5 seeds per dataset**, public-metadata DAPC, Stage 7b on, 10 epochs. Command: `run_hard_stress_test.py --seeds 5`; raw data in `runs/hard_stress_test_results.json`.
 
-```
-========================================================================================================================
-                                     MULTI-DATASET EMPIRICAL BENCHMARK SUMMARY
-========================================================================================================================
-Dataset                                   Rows x Dim    Time   Corr Error   Exact Copies   Mean DCR   Headline ε   Formal RDP ε
-------------------------------------------------------------------------------------------------------------------------
-1. Pima Indians Diabetes (Clinical)         614 x 9     8.2s     0.0242        0.00%      10,436.3      1.0000       1.0723
-2. Breast Cancer Wisconsin (Oncology)       455 x 31    3.9s     0.0151        0.00%   3,190,359.5      1.0000       1.0715
-3. Kaggle Bank Customer Churn (Mixed)     1,600 x 13   12.3s     0.0083        0.00%       2,188.2      1.0000       1.0751
-4. Actuarial Medical Risk (Regression)    1,070 x 7    84.8s     0.0343        0.00%         278.3      1.0000       1.0740
-========================================================================================================================
-```
+| Dataset | train rows | TSTR (mean ± sd) | TRTR | ε |
+|---|---|---|---|---|
+| Pima Indians Diabetes | 614 | AUC 0.472 ± 0.065 | 0.812 | 0.754 |
+| Breast Cancer Wisconsin | 455 | AUC 0.309 ± 0.152 | 0.995 | 0.716 |
+| Bank Customer Churn | 1,600 | AUC 0.486 ± 0.052 | 0.848 | 0.815 |
+| Actuarial Medical Risk | 1,070 | R² −4.135 ± 2.505 | 0.863 | 0.765 |
 
-### Key Quantitative Findings:
-1. **Zero Memorization & Strict Privacy Guarantee:** Across all 4,739 evaluated synthetic records, the exact copy rate was **strictly 0.00%**. Mean Distance to Closest Record (DCR) confirmed that synthetic records are well-separated from training patients in normalized feature space.
-2. **Correlation Matrix Preservation:** The Frobenius correlation error between real and synthetic feature matrices remained low across all domains ($0.0083$ on Bank Churn, $0.0151$ on Wisconsin 31-D Oncology, $0.0242$ on Pima Diabetes), confirming that the continuous flow matching vector field successfully captures joint dependency structures.
-3. **Execution Efficiency:** On an NVIDIA GeForce RTX 4060 Ti GPU, complete end-to-end training and synthesis (10 epochs DP-SGD + ODE integration + DP recalibration) completed in **3.9 to 12.3 seconds** for tabular classification tasks, demonstrating suitability for high-throughput clinical pipelines.
+### Key findings (honest reading)
+1. **Privacy:** every run stays within its DAPC-selected budget (ε 0.72–0.82, δ=1e-5), and there are no exact copies. "0% exact copies" is a weak privacy signal on continuous data and should not be presented as a membership-privacy result.
+2. **Utility is at chance on every small dataset.**
+   - No training schedule changes this. A probe on Pima tried batch 32–512 and 20–800 DP steps; all gave AUC 0.48–0.55 ± 0.08–0.15, because the accountant raises σ from 5.4 to 18.6 to pay for the extra steps (`runs/_probe_smallN.log`).
+   - Wisconsin's below-chance mean is **not** signal. With few steps the network stays near its random initialisation, and that initialisation's output correlations have a seed-specific sign: the same seed gives AUC ≈ 0.1 even at ε = 50 (`runs/_diag_commonmode.py`).
+   - The Adult study (`ICFM_SENSITIVITY_PROOF.md` §6, §6b) shows the same pattern at N = 12k, plus matched-ε baselines.
+3. **Correlation error** is Frobenius norm divided by $d^2$, so it is small by construction and should not be cited as evidence of preserved joint structure.
 
 ---
 
@@ -117,3 +114,30 @@ When writing the research paper based on this repository, observe the following 
 2. **Report Both Epsilon Bounds:** Report headline Opacus PRV Upper Bound ($\varepsilon = 1.000000$) and formal RDP analytical composition ($\varepsilon \approx 1.074$) side-by-side.
 3. **Attribute Marginal Correction to Stage 7b:** Position DP marginal recalibration as a formal post-processing contribution that addresses continuous flow representation limits on tabular simplicia.
 4. **Distinguish C2ST from True MIA:** Use Classifier Two-Sample Test (C2ST) for fidelity evaluation and shadow-model holdout attacks for empirical membership inference risk.
+5. **Report the regression-benchmark utility failure honestly** ($\text{TSTR } R^2 = -3.13$ on Actuarial Medical Risk) rather than omitting the fourth benchmark — it is real evidence for the representation-limit argument in §4.1, not a result to suppress.
+
+---
+
+## 6. Corrigendum (2026-09-23, same day)
+
+The first version of this report's §3 table was generated **without a declared public schema**, so `ACFMNetV5Pipeline` fell back to its default schema inference (`acfm_net.privacy.contract.public_schema_from_dataframe`), which assigns a generic $\pm 1000$ / $\pm 10000$ bound to any column it doesn't recognize by a small hardcoded clinical-vitals name list. Only 2 of 9 Pima columns (`Glucose`, `BMI`, `Age`) matched; every other column — including the binary `Outcome`/`Churn`/target columns — was generated on a meaningless scale. This was masked because (a) Pearson correlation is scale-invariant, so §3's correlation-error numbers looked fine regardless, and (b) it produced the anomalously large Mean DCR values in the original table ($10{,}436$ / $3{,}190{,}359$ / $2{,}188$ / $278$) that should have been flagged as a red flag rather than reported as-is.
+
+Two defects were found and fixed:
+1. **Missing declared schema** (`backend/run_hard_stress_test.py`): now builds and passes a `public_schema` per dataset from documented public value ranges (not observed sample extrema, preserving the strict-release privacy invariant).
+2. **Stage 7b DP recalibrator treated all numeric columns as continuous** (`postprocessing/dp_recalibration.py`), rank-interpolating binary/integer columns into arbitrary floats even after decode-time rounding had produced valid values. Fixed to round discrete-kind columns back to valid integers after DP marginal recalibration.
+3. A data-hygiene issue in the same script fed `CustomerId`/`Surname` (a row identifier and a free-text name) into the Bank Churn benchmark as generative features, inflating its Mean DCR; both are now dropped before the pipeline runs, matching the project's own de-identification stance.
+
+All §3 numbers above are from the corrected run. Every prior report claiming "0.00% exact copies" and "certified DP" from this benchmark remains true (those properties were never affected by the schema bug), but any prior claim about downstream utility (TSTR) or Mean DCR from before this corrigendum should not be cited.
+
+---
+
+## 7. Corrigendum 2 (2026-09-24) — privacy-mechanism defects
+
+The "certified DP" statement in Corrigendum 1 was wrong for the runs behind the original §3 table. Defects found and fixed:
+
+1. **Stage 7b Laplace noise used a fixed public seed** (`release_dp_histograms(..., seed=42)` in `pipeline.py`). With the seed in public code the noise is a known constant; subtracting it recovers the exact private histograms, so Stage 7b provided **no** privacy in those runs. Now unseeded (`np.random.default_rng()`), seeds allowed only in tests.
+2. The same fixed-seed pattern in `privacy/contract.py` (`sanitize_dependency_matrix`, non-default ablation path) — fixed. `sanitize_missing_summary` (dead code, and its sensitivity was under-stated by a factor of d) — removed.
+3. **DAPC's private risk inputs were not a valid DP release**: Laplace noise was clipped to ±0.05 (clipping the noise, not the query, breaks the mechanism), sensitivity used `1/max(500, N)` (under-noised for N<500), the seed was fixed, and the ε_meta charge never reached the privacy ledger. This also caused the R_P=0.4667 coincidence across datasets. DAPC now selects ε from public metadata only (rounded N, encoded dimension, schema column-name sensitivity, target-name flag) — zero privacy cost, no adaptive-composition argument needed.
+4. The noised dependency-graph ablation (`use_public_graph_only=False`) now warns that its 2/N sensitivity is not established for the statistics it uses; its ledger charge is not a certified guarantee.
+
+The §3 table must be regenerated with the fixed code before any of its ε values are cited; see `runs/hard_stress_test_results.json` after rerunning `lumisyn/backend/run_hard_stress_test.py`. The paper's core claim now lives in `report/ICFM_SENSITIVITY_PROOF.md`.

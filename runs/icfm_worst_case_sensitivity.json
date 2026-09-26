@@ -1,0 +1,19 @@
+{
+  "regime": "all per-sample gradients clipped (C = 0.5 * min grad norm)",
+  "adversary": "best of top-5 by reassignment count over 200 real + 63 prior-anchored + 50 domain-corner candidates per trial",
+  "n_trials": 100,
+  "ot_reassigned_other_records_mean": 13.86,
+  "ot_reassigned_other_records_max": 26,
+  "batch_ot": {
+    "sensitivity_over_2C_mean": 0.8508007938962773,
+    "sensitivity_over_2C_std": 0.1388557179766792,
+    "sensitivity_over_2C_max": 1.1467652142701967,
+    "fraction_exceeding_bound": 0.15
+  },
+  "i_cfm": {
+    "sensitivity_over_2C_mean": 0.44233226850773993,
+    "sensitivity_over_2C_std": 0.11743919304843177,
+    "sensitivity_over_2C_max": 0.6481356920746568,
+    "fraction_exceeding_bound": 0.0
+  }
+}

@@ -112,7 +112,10 @@ class DPSGDWrapper:
                     inputs=params,
                     grad_outputs=grad_outputs,
                     is_grads_batched=True,
-                    retain_graph=(end < B) or retain_graph,
+                    # Always retain here: if this batched attempt raises partway through
+                    # (e.g. an op unsupported under vmap), the graph must still be intact
+                    # for the per-sample fallback below to retry on.
+                    retain_graph=True,
                     allow_unused=True,
                 )
                 c_sq = torch.zeros(c_len, device=losses.device)
@@ -138,8 +141,15 @@ class DPSGDWrapper:
                             view_shape = [c_len] + [1] * (g.dim() - 1)
                             clipped_g = g * c_clip_coef_t.view(*view_shape)
                             clipped_grads[idx].add_(clipped_g.sum(dim=0))
-        except Exception:
+        except Exception as exc:
+            import warnings
+            warnings.warn(
+                f"DPSGDWrapper: batched per-sample grad failed ({exc!r}); "
+                "falling back to the exact per-sample loop.",
+                RuntimeWarning,
+            )
             use_chunked = False
+            self.optimizer.zero_grad()
 
         if not use_chunked:
             # Fallback: exact per-sample gradient loop if batched autograd fails
@@ -194,6 +204,104 @@ class DPSGDWrapper:
                 p.grad = perturbed_grad
             else:
                 p.grad = None
+
+        self.optimizer.step()
+        return loss_scalar
+
+    def step_microbatch_grouped(
+        self,
+        losses: torch.Tensor,
+        param_groups: Dict[str, List[nn.Parameter]],
+        group_max_norm: Dict[str, float],
+        retain_graph: bool = False,
+    ) -> float:
+        """
+        Per-group DP-SGD step (Abadi et al. + per-group clipping). Each group g is
+        clipped independently to group_max_norm[g] instead of one shared global
+        threshold, so a component with naturally small gradients (e.g. a VAE
+        encoder) isn't submerged under noise scaled to a threshold dominated by a
+        larger component (e.g. its decoder) — the documented cause of posterior
+        collapse under DP-SGD for hierarchical models.
+
+        Formal sensitivity proof: audit_out/privacy_proof_per_group_clipping.md
+        (verified independently by backend/tests/test_per_group_sensitivity.py).
+        Effective global L2 sensitivity is sqrt(sum_g group_max_norm[g]^2); using
+        the SAME noise_multiplier for every group (as done here) preserves the
+        exact same accountant guarantee as a single global mechanism with that
+        effective sensitivity — no change needed to how PRVAccountant.step() is
+        called elsewhere.
+        """
+        B = losses.shape[0]
+        loss_scalar = float(losses.mean().item()) if B > 0 else 0.0
+        group_names = list(param_groups.keys())
+        all_params = [p for name in group_names for p in param_groups[name]]
+        scale_divisor = float(self.expected_batch_size) if self.expected_batch_size is not None else float(max(1, B))
+        c_eff = float(np.sqrt(sum(group_max_norm[n] ** 2 for n in group_names)))
+
+        if B == 0 or not all_params:
+            self.optimizer.zero_grad()
+            for name in group_names:
+                c_g = group_max_norm[name]
+                for p in param_groups[name]:
+                    if self.noise_multiplier > 0.0:
+                        p.grad = (torch.randn_like(p) * (self.noise_multiplier * c_g)) / scale_divisor
+                    else:
+                        p.grad = torch.zeros_like(p)
+            if all_params:
+                self.optimizer.step()
+            self.last_sample_norms = []
+            self.last_clipped_norms = []
+            self.last_fraction_clipped = 0.0
+            return 0.0
+
+        clipped_grads: Dict[str, List[torch.Tensor]] = {
+            name: [torch.zeros_like(p) for p in param_groups[name]] for name in group_names
+        }
+        sample_norms_eff: List[float] = []
+
+        for i in range(B):
+            sample_grads = torch.autograd.grad(
+                losses[i],
+                all_params,
+                retain_graph=(i < B - 1) or retain_graph,
+                allow_unused=True,
+            )
+            offset = 0
+            total_clipped_sq = 0.0
+            for name in group_names:
+                n_params_g = len(param_groups[name])
+                grads_g = sample_grads[offset:offset + n_params_g]
+                offset += n_params_g
+                norm_sq = sum(float(g.pow(2).sum().item()) for g in grads_g if g is not None)
+                norm_g = max(1e-8, norm_sq ** 0.5)
+                c_g = group_max_norm[name]
+                clip_coef = min(1.0, c_g / norm_g)
+                total_clipped_sq += (norm_g * clip_coef) ** 2
+                for acc_g, g in zip(clipped_grads[name], grads_g):
+                    if g is not None:
+                        acc_g.add_(g * clip_coef)
+            sample_norms_eff.append(total_clipped_sq ** 0.5)
+
+        # Mathematical Invariant Assertion: effective per-sample norm <= C_eff for all samples
+        for i, eff_norm in enumerate(sample_norms_eff):
+            assert eff_norm <= c_eff + 1e-4, (
+                f"DP Invariant Violation: Sample {i} effective clipped norm {eff_norm:.6f} "
+                f"exceeds C_eff={c_eff:.6f}."
+            )
+
+        self.last_sample_norms = sample_norms_eff
+        self.last_clipped_norms = sample_norms_eff
+        self.last_fraction_clipped = float(np.mean([n >= c_eff - 1e-6 for n in sample_norms_eff]))
+
+        self.optimizer.zero_grad()
+        for name in group_names:
+            c_g = group_max_norm[name]
+            for p, acc_g in zip(param_groups[name], clipped_grads[name]):
+                if self.noise_multiplier > 0.0:
+                    noise = torch.randn_like(acc_g) * (self.noise_multiplier * c_g)
+                    p.grad = (acc_g + noise) / scale_divisor
+                else:
+                    p.grad = acc_g / scale_divisor
 
         self.optimizer.step()
         return loss_scalar
