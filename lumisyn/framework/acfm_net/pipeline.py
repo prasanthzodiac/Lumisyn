@@ -207,6 +207,9 @@ class ACFMNetV5Pipeline:
         conditional_marginals: Optional[Any] = None,
         conditional_copula: str = "flow",
         noise_multiplicity: int = 1,
+        pretrain_on_marginals: bool = False,
+        pretrain_epochs: int = 20,
+        dp_finetune: bool = True,
     ):
         if not strict_release_privacy and not allow_nonprivate_debug:
             raise ValueError(
@@ -258,6 +261,11 @@ class ACFMNetV5Pipeline:
         self.conditional_marginals = conditional_marginals
         self.conditional_copula = conditional_copula
         self.noise_multiplicity = int(noise_multiplicity)
+        # Warm start: pretrain the flow on records sampled from the Stage 7c noisy tables
+        # (post-processing of an already-accounted release, so it costs no privacy budget).
+        self.pretrain_on_marginals = bool(pretrain_on_marginals)
+        self.pretrain_epochs = int(pretrain_epochs)
+        self.dp_finetune = bool(dp_finetune)  # False = ablation: DP steps still run and are accounted, but lr = 0
 
         # -- GPU / Device detection --------------------------------------------
         if torch.cuda.is_available():
@@ -306,6 +314,21 @@ class ACFMNetV5Pipeline:
 
         # Stage 7: Repair Loop
         self.repair_loop = ConstrainedGradientRepairLoop()
+
+    def _marginal_pretraining_data(self, cond_marg, columns, public_schema, n_rows):
+        """Records drawn only from the released noisy tables, encoded with the public schema."""
+        cols_spec = public_schema.get("columns", public_schema)
+        seed = {}
+        for c in columns:
+            spec = cols_spec.get(c, {})
+            seed[c] = [spec["categories"][0]] * n_rows if spec.get("type") == "categorical" and spec.get("categories") \
+                else [float(spec.get("bounds", [0.0, 1.0])[0])] * n_rows
+        df_pre = cond_marg.recalibrate(pd.DataFrame(seed)[list(columns)], copula="independent")
+        imp, _ = AdaptiveImputer().fit_transform(df_pre, {}, privacy_mode=True, public_schema=public_schema)
+        X, info = DistributionPreservingEncoder().fit_transform(imp, privacy_schema=public_schema)
+        Xs = AdaptiveFeatureScaler().fit_transform(X, info["feature_specs"], privacy_mode=True,
+                                                   encoded_column_names=info["encoded_column_names"])
+        return torch.tensor(Xs, dtype=torch.float32)
 
     def _make_dataloader(self, X_tensor: torch.Tensor, batch_size: Optional[int] = None) -> data_utils.DataLoader:
         bs = batch_size or BATCH_SIZE
@@ -1019,6 +1042,22 @@ class ACFMNetV5Pipeline:
             num_layers=self.flow_num_layers,
             adj_matrix=flow_adj,
         ).to(self.device)
+        cm_report = None
+        if cond_marg is not None and self.pretrain_on_marginals:
+            cm_report = cond_marg.release(df_deidentified, cm_noise)
+            X_pre = self._marginal_pretraining_data(cond_marg, df_deidentified.columns, public_schema, len(X_cpu))
+            assert X_pre.shape[1] == latent_dim, f"pretraining encoding {X_pre.shape[1]} != {latent_dim}"
+            pre_opt = torch.optim.AdamW(ot_cfm.velocity_net.parameters(), lr=self.flow_lr, weight_decay=1e-5)
+            pre_loader = data_utils.DataLoader(data_utils.TensorDataset(X_pre), batch_size=actual_batch_size, shuffle=True)
+            ot_cfm.train()
+            for _ in range(self.pretrain_epochs):
+                for (xb,) in pre_loader:
+                    pre_opt.zero_grad()
+                    ot_cfm.compute_loss(xb.to(self.device)).backward()
+                    pre_opt.step()
+            report["flow_warm_start"] = {"source": "Stage 7c noisy tables (post-processing)", "rows": int(len(X_pre)),
+                                         "epochs": self.pretrain_epochs}
+            print(f"[Stage 6 Warm start] Pretrained flow on {len(X_pre)} records sampled from the DP marginals.")
         p_flow = sum(p.numel() for p in ot_cfm.velocity_net.parameters() if p.requires_grad)
         noise_over_clip = float(actual_sigma_flow * math.sqrt(p_flow) / actual_batch_size)
         print(f"[Stage 6 VelocityNet] Parameters: {p_flow:,} | Flow sigma: {actual_sigma_flow:.4f} | noise/clip = sigma*sqrt(p)/B: {noise_over_clip:.6f}")
@@ -1035,7 +1074,10 @@ class ACFMNetV5Pipeline:
             target_delta=delta_flow if self.latent_mode == "vae" else training_delta,
             expected_batch_size=actual_batch_size,
         )
-        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer_cfm, T_max=epochs, eta_min=1e-5)
+        if not self.dp_finetune:
+            for g in optimizer_cfm.param_groups:
+                g["lr"] = 0.0
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer_cfm, T_max=epochs, eta_min=0.0 if not self.dp_finetune else 1e-5)
 
         # Gate 2b Item 1 & 3 / Gate 3b Item 8: Flow-loss baseline
         # Theoretical zero-predictor loss under N(0, I) latents: 2.0000; Gaussian floor: pi / 2 ≈ 1.5708
@@ -1419,7 +1461,8 @@ class ACFMNetV5Pipeline:
             df_synthetic = df_synthetic[orig_cols]
 
         if cond_marg is not None:
-            cm_report = cond_marg.release(df_deidentified, cm_noise)
+            if cm_report is None:  # not yet released by the warm start
+                cm_report = cond_marg.release(df_deidentified, cm_noise)
             df_synthetic = cond_marg.recalibrate(df_synthetic, copula=self.conditional_copula)
             report["conditional_marginals"] = cm_report
             _record_stage(report, "7c", "DP class-conditional marginals", "PASSED", cm_report)

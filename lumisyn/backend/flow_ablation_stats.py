@@ -42,7 +42,11 @@ def main():
                                "marginals_only_mean": float(b.mean()), "marginals_only_std": float(b.std(ddof=1)),
                                "diff_mean": float(d.mean()), "diff_ci95": [float(ci[0]), float(ci[1])],
                                "wilcoxon_p": float(stats.wilcoxon(a, b).pvalue) if np.any(d != 0) else 1.0,
-                               "equivalence_margin": margin, "tost_p": tost(d, margin)}
+                               "equivalence_margin": margin, "tost_p": tost(d, margin),
+                               "diff_sd": float(d.std(ddof=1)), "df": len(d) - 1,
+                               "tost_t_lower": float((d.mean() + margin) / (d.std(ddof=1) / np.sqrt(len(d)))),
+                               "tost_t_upper": float((d.mean() - margin) / (d.std(ddof=1) / np.sqrt(len(d)))),
+                               "per_seed": {int(s_): [float(x), float(y)] for s_, x, y in zip(seeds, a, b)}}
     (ROOT / "flow_ablation_stats.json").write_text(json.dumps(out, indent=2))
     for ds, r in out.items():
         for metric in MARGINS:

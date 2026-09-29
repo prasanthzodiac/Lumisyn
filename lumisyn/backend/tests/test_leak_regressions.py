@@ -39,3 +39,13 @@ def test_stage7b_bin_edges_do_not_depend_on_private_values():
     ha, _ = rec.release_dp_histograms(a, eps_m=1.0)
     hb, _ = rec.release_dp_histograms(b, eps_m=1.0)
     assert np.array_equal(ha["gain"]["pos_bins"], hb["gain"]["pos_bins"])
+
+
+def test_loader_sampling_rate_never_exceeds_accountant_rate():
+    """Opacus DPDataLoader samples at 1/ceil(N/B); the accountant is given q = B/N, which must be >= it."""
+    import torch
+    from torch.utils.data import DataLoader, TensorDataset
+    from opacus.data_loader import DPDataLoader
+    for n, b in [(12000, 512), (16000, 512), (614, 512), (455, 64), (100000, 1024), (513, 512)]:
+        loader = DPDataLoader.from_data_loader(DataLoader(TensorDataset(torch.zeros(n, 1)), batch_size=b))
+        assert loader.sample_rate <= min(1.0, b / n) + 1e-12

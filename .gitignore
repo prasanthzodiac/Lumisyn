@@ -3,3 +3,30 @@
 __pycache__/
 .pytest_cache/
 runs/baselines/*.csv
+
+# never commit: SSH keys accidentally saved in the repo root
+git push -u origin main
+git push -u origin main.pub
+*.pem
+id_*
+
+# third-party tools / assistant config (not part of the artifact)
+.agents/
+.aris/
+.claude/
+ECC-main/
+caveman-main/
+impeccable-main/
+shannon-main/
+skills-main/
+superpowers-main/
+taste-skill-main/
+tabsyn/
+skills-lock.json
+New folder/
+_excluded_generated/
+audit_out/
+
+# paper build: dependencies and copyrighted reference texts
+paper/docx_build/node_modules/
+paper/refs_text/

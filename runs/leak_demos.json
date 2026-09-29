@@ -1,0 +1,34 @@
+{
+  "fixed_seed": {
+    "cells": 6,
+    "cells_recovered_exactly": 6,
+    "cells_unclipped": 6,
+    "note": "eps_m=0.1 Laplace histogram, seed 42 as in the pre-fix code"
+  },
+  "clipped_noise": {
+    "noise_clip": 1.0,
+    "query_gap": 3.0,
+    "outputs_disjoint": true,
+    "consequence": "output ranges [f(D)-c, f(D)+c] and [f(D')-c, f(D')+c] do not overlap, so epsilon is infinite"
+  },
+  "model_buffer": {
+    "matrix_size": 78,
+    "max_abs_error_recovering_private_cosine": 1.0839724856603894e-07,
+    "note": "adversary reads the adj_matrix buffer from the released state_dict and inverts D^-1/2 (A+I) D^-1/2"
+  },
+  "bin_edge": {
+    "column": "capital-gain",
+    "published_edge": 594.0,
+    "smallest_private_positive_value": 594.0,
+    "equal": true,
+    "fixed_edge": 1.0
+  },
+  "schema_fallback": {
+    "column": "age",
+    "encoder_raw_min": 17.0,
+    "private_min": 17.0,
+    "encoder_raw_max": 90.0,
+    "private_max": 90.0,
+    "leaked": true
+  }
+}

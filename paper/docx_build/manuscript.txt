@@ -1,0 +1,391 @@
+Minibatch Optimal Transport Invalidates Standard DP-SGD Accounting in Private Flow Matching for Tabular Data
+[Author Name]¹, [Author Name]², [Author Name]³, [Author Name]¹*
+¹ [Department, Institution, City, Country]
+² [Department, Institution, City, Country]
+³ [Department, Institution, City, Country]
+* Correspondence: [Corresponding author name] ([email address])
+Keywords: differential privacy | DP-SGD | flow matching | optimal transport | privacy auditing | synthetic tabular data | negative results
+ABSTRACT
+Synthetic tabular data trained under differential privacy is often proposed as a safe way to share sensitive records, and flow matching is an attractive generator for the task because it trains stably and samples quickly. We examined this route end to end and report three findings. First, minibatch optimal-transport (OT) coupling, a common technique for straightening flows, makes the loss of each example depend on the rest of its batch. This violates the per-example sensitivity assumption on which the standard DP-SGD accountant relies, while the reported privacy budget stays unchanged. We prove that the assumption is not guaranteed under OT coupling, show that independent coupling (I-CFM) satisfies it by construction, and exhibit violating neighbouring batches on two datasets. On a 20,000-record cardiovascular cohort, our search found violations in 69% of audited batches, and a finite-sample white-box audit of the corresponding conditional Gaussian step certified, at 95% confidence, that its sensitivity exceeds the bound assumed by standard DP-SGD accounting. Within that accounting framework, no valid certificate for the run can be smaller than ε = 1.47, whereas 0.84 was reported; this constrains the accounting and is not a lower bound on the privacy loss of the subsampled mechanism. Second, we give an end-to-end privacy proof for a complete public-schema synthesis pipeline built on I-CFM. Checking that proof against the code exposed five further classes of implementation defects, each of which we reproduce on real data. Third, we measure where utility comes from. In a target-aware setting, spending part of the budget on noisy class-conditional marginals raises the downstream AUC on UCI Adult from 0.49 to 0.906 at ε = 0.741, above AIM run with the same target-aware workload (0.872). Under the evaluated datasets, privacy levels and training configurations, no practically relevant utility contribution from the flow was detected under prespecified equivalence margins (10 paired seeds, two one-sided tests, p &lt; 0.001): the marginal stage accounted for essentially all measured utility.
+1 Introduction
+Sensitive tabular records, such as hospital admissions, insurance claims and census responses, are among the most useful and least shareable data that institutions hold. Synthetic data offers a way around this tension: a generator learns the distribution of the private table and releases new records that have no direct link to real individuals [1]. Recent generators for mixed-type tables have narrowed the gap to real data considerably [2–4], and the clinical community has started to validate them on large cohorts, where models trained on synthetic records approach the predictive performance of models trained on the originals [1]. A synthetic record, however, is not private by default. Generators can memorise rare records, and only a formal guarantee such as differential privacy (DP) [5] bounds what an adversary can learn about any single person.
+The standard way to obtain that guarantee for a neural generator is differentially private stochastic gradient descent (DP-SGD) [6]. DP-SGD has been used to train GANs [7], diffusion models [8] and, more recently, rectified flows [9]. Its standard privacy analysis rests on a single invariant: each training example influences the noisy update only through its own clipped per-example gradient. Libraries enforce this invariant for known offenders; Opacus, for instance, refuses batch normalisation layers because they mix statistics across examples [10]. The accountant computes a guarantee from the noise multiplier, the sampling rate and the number of steps under the assumptions supplied to it; it does not verify that the implemented mechanism satisfies them. A training loss that silently couples examples therefore leaves the reported ε unchanged even though the conditions of the analysis no longer hold. For contrastive losses this problem is known, and dedicated mechanisms have been proposed for it [11].
+Flow matching [12, 13] learns a velocity field that transports a Gaussian prior to the data along straight paths between paired samples. How the samples are paired matters for sample quality. Pairing each record with an independent noise draw (independent coupling, I-CFM) is simple but produces curved flows; solving an assignment problem over the whole minibatch (OT-CFM) straightens the flows and allows fewer integration steps [14, 15]. The OT plan, however, is a function of every record in the batch. To our knowledge, no prior work has asked what this does to DP-SGD. The question is practical, because OT coupling is offered as a drop-in option in widely used flow-matching code, and a practitioner who adds DP-SGD to such code obtains a certificate that looks correct.
+A second question concerns utility. Deep DP generators are usually compared with each other, yet benchmarks of DP synthesis consistently find that simple marginal-based methods such as MST and AIM perform best on tabular data [16–18]. When a pipeline combines a deep generator with a marginal-based component, the credit for good results is easily assigned to the deep model. We therefore designed our evaluation around the ablation that separates the two.
+In this study, we built and audited a complete DP synthesis pipeline for tabular data based on flow matching. More specifically, we aimed to: (i) determine whether minibatch OT coupling is compatible with the standard DP-SGD analysis, in theory and on real data, (ii) certify any violation with an audit whose conclusion holds at a stated confidence level, (iii) prove an end-to-end guarantee for the full pipeline and check it against the implementation, and (iv) measure how much of the downstream utility is due to the flow itself. We keep three kinds of evidence apart throughout: the theorem states what can happen in general, the adversarial search finds concrete counterexamples, and the conditional white-box audit certifies a sensitivity violation for a specific neighbouring pair. The paper makes the following contributions, in order of importance.
+An accounting pitfall. We prove that batch-OT coupling does not guarantee the sensitivity bound assumed by standard DP-SGD accounting, under both add/remove and replace-one adjacency, while I-CFM satisfies it by construction. Replacement records found by our search re-pair up to 26 of 64 batch members.
+A certified audit on two datasets. Finite-sample white-box audits of the conditional Gaussian step certify, at 95% confidence, that the audited neighbouring batches violate the sensitivity bound. Within the standard accounting framework this forces certificates at least 22% (UCI Adult: 0.898 against 0.735 reported) and 76% (cardiovascular cohort: 1.474 against 0.839) above the reported values. We do not present these as lower bounds on the privacy loss itself, which would require auditing the subsampled mechanism.
+A taxonomy of implementation defects with reproductions. Checking an end-to-end proof against the code exposed five classes of defects that leak private information without changing the reported ε. We reproduce each on real data; for example, a private 78 × 78 feature-similarity matrix is recovered from released weights with a maximum error of 1.1 × 10⁻⁷.
+A scoped negative result about utility. In a target-aware setting, a jointly accounted marginal stage lifts utility above AIM and MST, and no practically relevant contribution from the flow was detected at any ε up to 4.7 that we tested.
+2 Methods
+2.1 Differential Privacy, Adjacency and Threat Model
+A randomised mechanism M is (ε, δ)-differentially private if Pr[M(D) ∈ S] ≤ eε Pr[M(D′) ∈ S] + δ for every pair of neighbouring datasets D ≃ D′ and every set of outputs S [5]. Our guarantees use add/remove adjacency (D and D′ differ by the presence of one record), the relation assumed by the Opacus accountants [10]. Because a replacement is a removal followed by an addition, an add/remove guarantee converts to replace-one adjacency as
+		(1)
+by sequential composition of the two steps. The sensitivity audits in Section 2.7 are stated for replace-one neighbours, for which the per-step bound assumed by the accountant is 2C.
+DP-SGD samples a batch B by including each record independently with probability q, clips every per-example gradient gi to norm C, and adds Gaussian noise to the clipped sum:
+		(2)
+Accountants based on Rényi DP [19] or on privacy random variables (PRV) [20] compose T such steps into one (ε, δ) guarantee, assuming that S(B) = Σ ḡi changes by at most C in L2 norm when one record is added or removed. We also use Gaussian differential privacy (GDP) [21]: a Gaussian step with sensitivity Δ and noise scale σC is (Δ/σC)-GDP, and for any test with false-positive rate α and false-negative rate β against a μ-GDP mechanism, μ ≥ Φ⁻¹(1 − α) − Φ⁻¹(β).
+Implementation of the DP-SGD step. We use Opacus 1.6 only for Poisson sampling (DPDataLoader) and for accounting (PRV, with RDP reported alongside); we do not use the Opacus optimizer. Per-example gradients are computed by microbatched autograd. The per-example loss is the mean squared error over the d encoded coordinates. Clipped per-example gradients are summed, N(0, σ²C²I) is added to the sum, and the noisy sum is divided by the fixed public constant B = 512, the expected batch size qN, before the AdamW update. Batches are drawn by the Opacus DPDataLoader.fromdataloader, which includes each record independently with probability qL = 1/⌈N/B⌉ (0.0417 for Adult and 0.0313 for Cardio), so the realised batch size varies around qL N. The accountant is given q = B/N (0.0427 and 0.0320). Since qL ≤ q for every N and B, and the PRV bound is non-decreasing in the sampling rate, the accounting is conservative; a regression test checks qL ≤ q. An empty batch is stepped with noise only and counted as a step. Dividing by qN is post-processing only when N is public, which is exactly the situation analysed by Wang et al. [22]; we therefore state that assumption explicitly below.
+Threat model. The adversary knows the code, every hyper-parameter, the public schema and every record except the target, and may choose the neighbouring dataset. It observes the synthetic dataset, the released weights of the velocity network and the privacy summary (ε, δ, σ, q, T). Training telemetry, such as loss curves and gradient norms, is computed without noise and is not released. We assume that (A1) column types, bounds and category lists are declared independently of the data; (A2) the cohort size N is public, as in every DP-SGD deployment that sets q = B/N; (A3) column and target names are public; and (A4) noise is unpredictable, with floating-point attacks [23] out of scope.
+2.2 Flow Matching and Couplings
+Conditional flow matching trains a velocity network vθ(zt, t) to regress the displacement z₁ − z₀ along zt = (1 − t)z₀ + t z₁, where z₀ ~ N(0, I) is a prior draw and z₁ is an encoded record [12]. The per-example loss is ℓi(θ) = ‖vθ(zt,i, ti) − (z1,i − z0,i)‖² / d. Under I-CFM, record i is paired with its own prior draw z0,i, and ti ~ U(0, 1) is drawn independently for each record. Under OT-CFM, the batch is re-paired by the assignment π∗ = argminπ Σi ‖z0,i − z1,π(i)‖², solved exactly with the Hungarian algorithm [24] (SciPy linearsumassignment), and record π∗(i) is matched with prior draw i [14, 15]. Algorithm 1 shows one DP-SGD step for both couplings and marks the single line at which batch dependence enters. Figure 1 illustrates the effect on a small two-dimensional example.
+Algorithm 1. One DP-SGD step of conditional flow matching. The two couplings differ only in line 3.
+Input: Poisson batch B (rate q), parameters θ, clip norm C, noise multiplier σ, public divisor qN
+1  for each record i ∈ B: draw z0_i ~ N(0, I), t_i ~ U(0, 1)          (independent per record)
+2  z1_i ← φ(x_i)                                                       (row-local public-schema encoding)
+3  I-CFM : pair (z0_i, z1_i)                                            -&gt; ℓ_i depends on record i only
+   OT-CFM: π* ← Hungarian(‖z0_a − z1_b‖², a, b ∈ B); pair (z0_i, z1_π*(i))  -&gt; ℓ_i depends on all of B
+4  zt_i ← (1 − t_i) z0_i + t_i z1_i ;  ℓ_i ← ‖v_θ(zt_i, t_i) − (z1_i − z0_i)‖² / d
+5  g_i ← ∇θ ℓ_i ;  ḡ_i ← g_i · min(1, C / ‖g_i‖₂)                      (per-example clipping)
+6  G ← ( Σ_{i∈B} ḡ_i + N(0, σ²C² I) ) / (qN)                          (noise on the sum, public divisor)
+7  θ ← AdamW(θ, G);  EMA update of the released copy                   (post-processing)
+Accountant: records (σ, q) for this step; it never inspects line 3.
+
+
+Figure 1. Where batch dependence enters (two-dimensional illustration with ten records and the exact Hungarian solver). Replacing one record (star) changes only its own pair under I-CFM, but under batch-OT it changes the pairs of six records, so their clipped gradients change as well. Dotted lines show the pairs before the replacement.
+2.3 Sensitivity of the Clipped-Gradient Sum
+Proposition 1 (I-CFM respects the bound). Under I-CFM, ℓi depends only on (z0,i, z1,i, ti, θ). Adding or removing record j therefore changes S(B) by exactly ḡj, so ‖S(B) − S(B′)‖₂ ≤ C. The standard accountant applies without modification.
+Theorem 1 (batch-OT does not guarantee the bound). Under OT-CFM, changing record j alters column j of the cost matrix, which may re-pair a set R of other records, with |R| = k ≤ |B| − 1. Then
+		(3)
+Standard DP-SGD accounting requires Δ₂(S) = sup ‖S(B) − S(B′)‖₂ ≤ C over add/remove neighbours and over all values of the per-example randomness (z₀, t). Under OT-CFM this condition is not guaranteed. Whenever Δ₂(S) &gt; C, the conditions of the standard accountant&apos;s proof are not satisfied, and its reported ε is no longer established by that analysis. The accountant cannot detect this, because it computes a guarantee from (σ, q, T) under the assumptions supplied to it. A replace-one violation also implies an add/remove violation: by the triangle inequality through B \ {j}, if ‖S(B) − S(B′)‖ &gt; 2C then one of the two add/remove neighbours differs by more than C. The theorem does not claim that an OT-trained model has no DP guarantee at all. A mechanism-specific analysis with a larger sensitivity bound, up to 2C(k + 1), would give a valid but much weaker certificate. The problem belongs to the family of non-decomposable objectives studied by Kong et al. [11], with one difference that makes it easy to miss: here the coupling creates the dependence, and the loss written for a single example looks per-example.
+2.4 Synthesis Pipeline
+The pipeline (Figure 2) turns a private table and a public schema into a synthetic table. Records are first encoded by a row-local map φ: numeric columns are scaled to [−1, 1] using the declared bounds, categorical columns are one-hot encoded over the declared categories, and missing values are filled with the midpoint of the public bounds. Because every constant used by φ comes from the schema, D ≃ D′ implies φ(D) ≃ φ(D′), and any mechanism that is DP on encoded records is DP on the raw ones. The velocity network and all training settings are listed in Table 1. The released model is an exponential moving average (EMA) of the DP-SGD iterates, which is post-processing. Sampled records are clamped to the public domain and decoded; one-hot blocks are decoded by argmax.
+
+Figure 2. Synthesis pipeline. Blue boxes are the only mechanisms that read private data; both are Gaussian mechanisms and are composed in a single PRV accountant (dashed lines). Grey boxes depend on public information only, and white boxes are post-processing of the two private releases.
+Table 1. Implementation and configuration. Complete settings, including the baseline environment, are listed in Supplementary Table S5.
+Item
+Setting
+Software
+Python 3.12.10; PyTorch 2.6.0 (CUDA 12.4, cuDNN 9.1); Opacus 1.6.0 (sampling and accounting only); NumPy 2.5.1; SciPy 1.18.0; scikit-learn 1.9.0
+Hardware and precision
+NVIDIA RTX 4060 Ti, 8 GB, driver 610.88; FP32 with TF32 matrix multiplication enabled
+Velocity network
+Sinusoidal time embedding (64) → Linear–SiLU–Linear; input Linear–LayerNorm–SiLU (128 units); 2 residual blocks of [Linear–LayerNorm–SiLU]×2; zero-initialised linear output; learnable input affine; PyTorch default initialisation otherwise
+Optimisation
+AdamW, learning rate 10⁻³, weight decay 10⁻⁵, cosine annealing to 10⁻⁵ per epoch; 5 epochs (Adult, Cardio), 10 epochs (small cohorts); no early stopping
+DP-SGD
+Poisson sampling, expected batch 512, clip norm C = 1.25, noise multiplier σ from bisection on the PRV accountant, δSGD = 8 × 10⁻⁶ (release δ = 10⁻⁵)
+Flow matching
+t ~ U(0, 1), z₀ ~ N(0, I); OT via exact Hungarian assignment (ablation only); EMA decay min(0.999, (1 + s)/(10 + s)) at step s
+Sampling
+RK4, 30 steps; clamp to [−1, 1]; argmax on one-hot blocks
+Seeds
+Experiments seed the PyTorch and NumPy generators with the run index (0–9) for reproducibility, which also fixes the DP-SGD noise; a release must not do this (Section 3.3). Stage 7c noise is drawn from an unseeded generator
+
+2.5 Choice of the Privacy Budget
+The released budget ε∗ of each dataset was fixed before any private computation by a public-metadata policy, the dataset-adaptive privacy budget controller (DAPC). For a requested budget of ε = 1, it selects ε∗ = 0.741 (Adult), 0.849 (Cardio) and 0.753 (Pima) from the rounded cohort size, the encoded dimension and name-based column sensitivities. Because it reads only public quantities, it consumes no privacy budget. Its complete specification, an adaptive budget-split rule and a robustness analysis are given in Supplementary Section S1. The results of the main text use fixed budget splits and do not depend on those details.
+2.6 Class-Conditional Marginal Stage and Joint Accounting
+The optional Stage 7c measures one table of counts per non-target column, cross-classified with the target, on public bins (32 bins, logarithmically spaced for heavy-tailed columns) and public categories, following the measurement step of MST and AIM [16, 17]. One record changes exactly one cell in each of the M tables, so the concatenated count vector has L2 sensitivity √M under add/remove adjacency. Adding N(0, z²M) to every cell is a Gaussian mechanism with noise multiplier z. We record it in the same PRV accountant as the DP-SGD steps, as a single step with sampling rate 1, and calibrate σ so that the joint composition equals ε∗. A fixed split spends a share ρ of ε∗ on the marginals, measured as the ε that the marginal release alone would cost; ρ = 0.9 is our primary configuration. After sampling, the synthetic table is post-processed in the spirit of Sklar&apos;s theorem [25]: class sizes are taken from the noisy tables, and within each class every column is quantile-mapped onto its noisy conditional marginal while the within-class ranks produced by the flow are kept. The flow thus supplies the dependence structure and the noisy tables supply the label–feature marginals. Replacing the flow&apos;s ranks with random ranks gives the marginals-only ablation, which uses no information from the flow.
+Theorem 2 (end-to-end guarantee). Let M₁ be T steps of Algorithm 1 with I-CFM, Poisson rate q = B/N, clip norm C and noise multiplier σ, and let M₂ be the Gaussian release of the M count tables with noise multiplier z. Under A1–A4, the release (synthetic data, EMA weights, privacy summary) is (ε∗, δSGD)-DP with respect to add/remove adjacency, where ε∗ is the PRV composition of M₁ and M₂ at δSGD = 8 × 10⁻⁶ ≤ δ.
+Proof outline. (a) Preprocessing is row-local under A1, so adjacency is preserved. (b) The budget policy, the split (z, σ), the number of steps T (fixed epochs, no data-dependent stopping), the initialisation and all hyper-parameters are functions of public inputs and constants. (c) By Proposition 1 each step of M₁ has add/remove sensitivity C; with Poisson sampling it is a subsampled Gaussian mechanism, including empty batches. The accountant&apos;s rate B/N is not smaller than the loader&apos;s actual rate, and dividing by the public constant qN is post-processing under A2. (d) The optimizer state, the AdamW update and the EMA are functions of the noisy gradients only. (e) M₂ is a Gaussian mechanism with L2 sensitivity √M and noise z√M, drawn independently of M₁. (f) PRV composition of the recorded history gives ε∗; the run asserts that the accountant stays within the target before any output is released. (g) Sampling, repair, decoding and the within-class quantile map read only the released model, fresh prior noise and the noisy tables, and are post-processing. Supplementary Section S2 gives the formal mechanism specification and the full proof, with every code path that reads private data classified.
+2.7 Privacy Audits
+Sensitivity search. We measured ‖S(B) − S(B′)‖₂/2C for replace-one neighbours in batches of 64 records, over 10 network initialisations with 10 batches each, and set C so that every per-example gradient was clipped, as it is in all our training runs. The random search replaces a record with another real record. The screened search picks the best of 313 candidates (200 real records, 63 records placed on other examples&apos; prior draws and 50 domain points) by how many other records they re-pair, and evaluates the exact sensitivity for the top five. The hill-climbed search starts from the three best screened candidates, restricted to valid encoded records, and runs 150 steps of local search on the exact objective. These are heuristic searches: they find counterexamples, and the true worst case may be larger.
+Conditional white-box step audit. For the worst pair found, we fix the two batches together with their prior draws and times, and test the conditional Gaussian mechanism S(B) + N(0, σ²C²I) against S(B′) + N(0, σ²C²I) with the training noise multiplier. The Neyman–Pearson test projects the output onto S(B′) − S(B). We estimate its false-positive and false-negative rates from 10⁶ independent noise draws per hypothesis and bound both with Clopper–Pearson intervals [26] (Bonferroni-corrected, 95% overall). This finite-sample test yields a 95% lower bound μlb on the GDP parameter of the conditional step, and therefore on its sensitivity, Δ ≥ μlb σC [27, 28]. Standard accounting assumes μ ≤ 2/σ for a replace-one step, so μlb &gt; 2/σ certifies that the sensitivity assumption fails for this pair.
+What the audit does and does not establish. The audit conditions on a fixed pair of batches, whereas the trained mechanism samples each record with probability q, which amplifies privacy. It is therefore not a lower bound on the privacy loss of the subsampled mechanism, and we do not report it as one. It does constrain the standard accounting framework, which certifies a Poisson-subsampled Gaussian mechanism from a single worst-case sensitivity bound: any valid bound must be at least the certified sensitivity of the audited pair. Re-running the accountant with the correspondingly larger bound, equivalently with the noise multiplier 2/μlb, gives the smallest ε this framework can certify for the run, which we call the *accounting-consistent ε∗. Estimating the privacy loss of the full subsampled mechanism would require auditing the sampling event as well, which we leave to future work.
+Black-box audit. We also ran a one-run canary audit [29] on the synthetic output: 1000 random valid-domain canaries were each included in training with probability 1/2, scored by their distance to the nearest synthetic record, and the 100 highest and 100 lowest scores were guessed as members and non-members. The number of correct guesses yields a lower bound on ε at 95% confidence.
+2.8 Datasets
+The sensitivity study and the main utility study used two datasets. UCI Adult [30] has 48,842 records in the combined UCI release, 23.9% of them with income above 50K (the target). We drew a uniform random sample of 15,000 records without replacement with a fixed seed (not stratified) and split it into 12,000 training and 3,000 test records; its 15 columns encode to 78 dimensions. The Kaggle cardiovascular disease dataset [31] has 70,000 records from medical examinations, with 11 features and a binary disease target. We drew a uniform random sample of 20,000 records in the same way (16,000 training and 4,000 test records; 12 encoded dimensions). We could not identify a peer-reviewed data descriptor for this dataset, so Supplementary Table S5 reports the SHA-256 digests of both source files to make the exact versions verifiable. For Cardio we declared bounds from clinical plausibility rather than from the data, for example systolic blood pressure in [60, 250] mmHg. An exploratory small-cohort stress test used Pima Indians Diabetes [32] (768 records; 614 training and 154 test) together with Breast Cancer Wisconsin, a bank churn table and an insurance-cost table (455 to 1600 training records). All train/test splits were 80/20, unstratified, with a fixed random seed. Every schema used in the paper was checked for completeness, since the pipeline would otherwise fall back to private statistics.
+2.9 Evaluation Metrics
+Train on synthetic, test on real (TSTR): a random forest is trained on the synthetic table and evaluated by AUC on the real held-out split; the same classifier trained on the real training split gives the reference (TRTR). An AUC of 0.5 corresponds to chance.
+Marginal total variation distance (TVD): for every column (1-way) or pair of columns (2-way), the real and synthetic tables are discretised on the public bins, and half the L1 distance between the two frequency tables is averaged over all columns or pairs. This is the workload error used to evaluate MST and AIM. Lower is better.
+Sensitivity ratio Δ/2C: the clipped-sum sensitivity of a replace-one pair divided by the bound assumed by standard accounting. Values above 1 are violations.
+Accounting-consistent ε: the smallest ε, at the training δ, that the standard subsampled-Gaussian accountant can certify when its sensitivity bound covers the audited pair (noise multiplier 2/μlb). It is not a lower bound on the privacy loss of the trained mechanism.
+2.10 Baselines and Statistical Analysis
+AIM, MST, DP-CTGAN and PATE-CTGAN were run with smartnoise-synth 1.0.8 [33, 34] at the same ε and δ, with the same public schema, numeric columns discretised on public bounds, and no budget spent on preprocessing. Because Stage 7c knows the target column, we also ran AIM restricted to the label × feature workload, which gives AIM the same task information; this is the comparison we regard as fair. Configuration sweeps used 3 seeds per cell. The coupling comparison and the flow ablation used 10 paired seeds. Paired differences were tested with the Wilcoxon signed-rank test [35], and equivalence with two one-sided t-tests (TOST) [36]. The equivalence margins, ±0.01 AUC and ±0.005 TVD, were fixed before the 10-seed confirmation runs and after the 3-seed exploratory sweep. They correspond to roughly a quarter of the seed-to-seed standard deviation of the deep baselines in AUC (0.036–0.054) and to about 5% of the 2-way TVD achieved on Adult, and we regard smaller differences as practically irrelevant for data release.
+3 Results
+3.1 The Search Finds Neighbours That Re-pair Much of the Batch
+On Adult, the screened search found replacement records that re-paired 13.9 other records on average and up to 26 of 64. The consequence for the clipped-gradient sum is shown in Figure 3 and Table 2. Random neighbours stayed within the bound, which explains why the problem is invisible in ordinary training, but the searched neighbours did not. The hill-climbed search exceeded the bound in 17% of Adult batches, by up to 1.182 times. The effect was larger on Cardio, where the bound was exceeded in 69% of batches and the worst batch reached 1.484 times the bound. As predicted by Proposition 1, I-CFM remained below the bound in all audited batches; its largest value was 0.975 on Cardio.
+
+Figure 3. Clipped-gradient-sum sensitivity relative to the bound assumed by standard DP-SGD accounting, for replace-one neighbours in batches of 64 records (100 batches per setting). Bars show mean ± standard deviation; triangles mark the worst batch found. The dashed line is the bound.
+Table 2. Clipped-sum sensitivity Δ/2C found by the searches (100 batches per row). Values above 1 violate the bound assumed by standard DP-SGD accounting.
+Dataset, search
+OT max
+OT &gt; 1
+I-CFM max
+I-CFM &gt; 1
+Adult, random
+0.99
+0%
+0.54
+0%
+Adult, screened
+1.147
+15%
+0.648
+0%
+Adult, hill-climbed
+1.182
+17%
+0.681
+0%
+Cardio, hill-climbed
+1.484
+69%
+0.975
+0%
+
+3.2 Conditional Audits Certify the Sensitivity Violation
+Sensitivity values found by a search could be attributed to numerical artefacts of that search. The conditional white-box audit removes this objection for the audited pairs, because its conclusion is a finite-sample bound that holds with 95% confidence. On Adult, the audit of the worst OT pair gave μ ≥ 0.896 against the 0.764 assumed by standard accounting (Table 3, Figure 4), so the sensitivity of that step exceeds the assumed bound. Within the standard accounting framework, a certificate that covers this pair cannot be smaller than ε = 0.898, whereas 0.735 was reported. On Cardio, the audit gave μ ≥ 1.427 against an assumed 0.966, and the accounting-consistent ε is 1.474 against a reported 0.839, 76% higher. These numbers describe what the standard accounting can certify; they are not measured privacy losses (Section 2.7). The same audit applied to the worst I-CFM pairs gave μ ≥ 0.518 on Adult and μ ≥ 0.936 on Cardio, both below the assumed values, as Proposition 1 predicts.
+Table 3. Conditional white-box audits of one DP-SGD step for the worst pair found (finite-sample test, 95% confidence). The last row is the smallest ε that the standard accounting framework can certify; it is not a privacy-loss lower bound.
+
+Adult OT
+Adult I-CFM
+Cardio OT
+Cardio I-CFM
+Noise multiplier σ
+2.617
+2.617
+2.070
+2.070
+Empirical FPR / FNR
+0.326 / 0.327
+0.397 / 0.397
+0.237 / 0.237
+0.319 / 0.320
+μ lower bound (95%)
+0.896
+0.518
+1.427
+0.936
+μ assumed (2/σ)
+0.764
+0.764
+0.966
+0.966
+Violation certified
+yes
+no
+yes
+no
+Reported ε
+0.735
+0.735
+0.839
+0.839
+Accounting-consistent ε
+≥ 0.898
+0.735
+≥ 1.474
+0.839
+
+
+Figure 4. Hypothesis-testing view of the conditional audits. Black curves show the trade-off between false-positive and false-negative rates that standard accounting assumes for one step; red dashed curves show the certified lower bound for the worst OT pair. The OT test points lie below the assumed curve, which is impossible if the assumed sensitivity bound held; the I-CFM points lie on or above it.
+The black-box canary audit found nothing. It gave εlb = 0 for three seeds of each coupling and also for a near-non-private control trained at ε = 28.6 for 30 epochs. This audit therefore has no power against this generator: the synthetic data does not reproduce individual canaries even when almost no noise is added. Implementation-level violations of the kind studied here are visible only to white-box audits, which agrees with earlier work on debugging DP implementations [37, 38].
+3.3 Checking the Proof Against the Code Exposed Five Leak Classes
+While writing the proof of Theorem 2, we checked every code path that reads private data. This exposed five leaks, none of which changed the reported ε. Table 4 lists them together with a reproduction on UCI Adult (script and output in the released artifact; minimal code patterns in Supplementary Section S3). The clearest case is the model buffer. A graph-refinement step stored the absolute cosine similarity between feature columns, computed over all private rows without noise, as the normalised adjacency buffer D−1/2(A + I)D−1/2 of the velocity network. Since each diagonal entry of that buffer equals 1/degi, the normalisation can be inverted exactly, and an adversary holding the released weights recovers the full private 78 × 78 similarity matrix with a maximum absolute error of 1.1 × 10⁻⁷. All five implementation defects were fixed in the audited implementation and covered by regression tests, and all pipeline experiments reported here were run after the fixes, with the exception of the training-length probe noted in Section 3.4.
+Table 4. Leak classes found by checking the proof against the implementation, with reproductions on UCI Adult (pre-fix behaviour).
+Leak class
+Where
+Reproduction (what an adversary recovers)
+Fix and regression test
+Fixed random seed on a noise path
+Histograms, dependency matrix, budget controller
+Regenerating the seed-42 Laplace noise recovers all 6 noisy race counts exactly
+Unseeded generator; test that repeated releases differ
+Clipping the noise instead of the query
+Early budget controller
+Output ranges of neighbours become disjoint once the query gap exceeds twice the clip, so ε is unbounded
+Clip the query, never the noise
+Un-noised statistic in a model buffer
+Graph refinement → velocity network
+Private 78 × 78 cosine matrix recovered from the weights, max error 1.1 × 10⁻⁷
+Strict mode uses public W₀ only; test that refinement ignores data
+Data-dependent bin edge
+Zero-inflated histogram
+Published edge 594 equals the smallest positive capital-gain value
+Edge from public bound; test that edges do not depend on data
+Silent schema fallback
+Encoder, undeclared bounds or categories
+Private age minimum (17) and maximum (90) enter the encoder
+Runtime warning listing uncovered columns; completeness check
+
+3.4 The Sound Coupling Costs No Detectable Utility
+With the flow alone and 10 paired seeds on Adult, I-CFM reached a TSTR AUC of 0.533 ± 0.049 and OT-CFM 0.526 ± 0.091 (Wilcoxon p = 0.49). Differences in correlation error (0.01086 against 0.01089) and in distance to the closest real record (5.20 against 5.16) were statistically significant but below 1% in size. An earlier run, made before the leaks of Section 3.3 were fixed, suggested a 0.05 AUC advantage for OT; it did not replicate. Both couplings, however, were close to chance, while the real-data reference was 0.917. A training-length probe, run before the fixes and therefore indicative only, showed that the same generator reached 0.861 when trained almost without noise for 60 epochs, so capacity is not the limiting factor. At ε ≈ 0.74 more training did not help in that probe, because the accountant raised the noise multiplier from 2.6 to 8.2 when the number of epochs went from 5 to 60.
+3.5 In the Evaluated Setting, Utility Comes from the Marginals
+Spending part of the budget on Stage 7c changed the picture completely (Figure 5, Table 5). On Adult, TSTR AUC rose from 0.49 with the flow alone to 0.879 with a 0.2 share and 0.906 with a 0.9 share, close to the real-data reference of 0.917. On Cardio, the 0.9 share reached 0.779, the same as the real-data reference. The 2-way TVD fell steadily as the share increased, and on Adult it reached 0.096. The decisive comparison is between the full pipeline and the marginals-only ablation at the same split (Table 6). With 10 paired seeds they were statistically equivalent on every metric at the prespecified margins; no practically relevant utility contribution from the flow was detected. On Adult, the TSTR AUC was 0.9060 against 0.9061 (difference −0.0001, 95% CI [−0.0023, 0.0021]); on Cardio, 0.7785 against 0.7789 (−0.0004, 95% CI [−0.0038, 0.0030]). The resulting confidence intervals were substantially narrower than the prespecified margins. The only detectable contribution of the flow was a reduction of 0.0011 in the 2-way TVD on Cardio (Wilcoxon p = 0.01), about 2% of the error and inside the equivalence margin. Per-seed values are listed in Supplementary Table S4.
+
+Figure 5. Downstream utility (left) and 2-way marginal error (right) as a function of the share of ε∗ spent on the class-conditional marginals; a share of 0 is the flow alone. Open diamonds show the marginals-only ablation at a share of 0.9, which uses no information from the flow. Points are means over 3 seeds, and over 10 seeds at a share of 0.9 for Adult and Cardio.
+Table 5. Budget split and flow ablation. Entries are TSTR AUC / 2-way TVD. DAPC-selected ε∗: Adult 0.741, Cardio 0.849, Pima 0.753.
+Configuration
+Adult
+Cardio
+Pima
+Flow only
+0.492 / 0.719
+0.732 / 0.365
+0.514 / 0.795
+Flow + 1-way marginals
+0.497 / 0.271
+0.710 / 0.227
+0.477 / 0.773
+Share 0.2
+0.879 / 0.207
+0.775 / 0.082
+0.696 / 0.736
+Share 0.6
+0.901 / 0.114
+0.780 / 0.049
+0.768 / 0.590
+Share 0.9 (10 seeds)
+0.906 / 0.096
+0.779 / 0.044
+–
+Share 0.9, marginals only (10 seeds)
+0.906 / 0.095
+0.779 / 0.046
+–
+
+Table 6. Equivalence tests, full pipeline minus marginals-only ablation at a 0.9 share (10 paired seeds, df = 9). Both one-sided tests must reject for equivalence.
+Dataset, metric
+Full (mean ± sd)
+Marginals only
+Difference [95% CI]
+Margin
+TOST t (lower, upper)
+TOST p
+Wilcoxon p
+Adult, AUC
+0.9060 ± 0.0018
+0.9061 ± 0.0016
+−0.0001 [−0.0023, 0.0021]
+±0.01
+10.13, −10.35
+1.6 × 10⁻⁶
+0.73
+Adult, 2-way TVD
+0.0959 ± 0.0013
+0.0953 ± 0.0016
++0.0006 [−0.0011, 0.0022]
+±0.005
+7.64, −6.06
+9.4 × 10⁻⁵
+0.49
+Cardio, AUC
+0.7785 ± 0.0027
+0.7789 ± 0.0029
+−0.0004 [−0.0038, 0.0030]
+±0.01
+6.36, −6.89
+6.5 × 10⁻⁵
+0.67
+Cardio, 2-way TVD
+0.0444 ± 0.0008
+0.0455 ± 0.0010
+−0.0011 [−0.0018, −0.0004]
+±0.005
+12.91, −20.19
+2.1 × 10⁻⁷
+0.01
+
+The result did not depend on the privacy level within the range we tested. At ε∗ = 2.45 and 4.72 on Adult, the full pipeline (with the adaptive split of Supplementary S1) reached 0.905 and 0.906, the marginals-only ablation 0.906 and 0.907, and the flow alone 0.526 and 0.581 (Figure 6). Averaging each record&apos;s loss over four noise draws, the noise multiplicity technique of DPDM [8], and halving the hidden width did not change the outcome either (Adult 0.900, Cardio 0.778, Pima 0.748).
+
+Figure 6. Utility on Adult across privacy levels. The full pipeline and the marginals-only ablation overlap at every ε∗, and the flow alone stays far below the real-data reference. Means ± standard deviation over 3 seeds.
+3.6 Comparison with Published DP Synthesizers in a Target-Aware Setting
+The comparison in this section concerns target-aware synthesis, in which the downstream prediction target is known when the budget is spent. At ε = 0.741 on Adult, AIM with the same label × feature workload as Stage 7c reached a TSTR AUC of 0.872, against 0.906 for our pipeline, and its 2-way TVD degraded to 0.267 against 0.096 (Table 7, Figure 7). With their default, target-agnostic workloads, AIM and MST reached 0.790 and 0.713 and kept low 2-way TVD (0.112 and 0.128); these numbers answer a different question, general-purpose synthesis, and should not be read as a like-for-like comparison. The deep baselines, DP-CTGAN and PATE-CTGAN, performed at chance, as did our flow without marginals, in line with published benchmarks in which marginal-based methods dominate DP synthesis of tabular data [18].
+Table 7. Comparison on Adult at ε = 0.741 and δ = 10⁻⁵. Mean ± standard deviation over 3 seeds (10 seeds for our main configuration). The first two rows are the target-aware comparison.
+Method
+Workload
+TSTR AUC
+1-way TVD
+2-way TVD
+Ours, flow + Stage 7c (share 0.9)
+label × feature
+0.906 ± 0.002
+0.028
+0.096
+AIM
+label × feature
+0.872 ± 0.002
+0.015
+0.267
+AIM
+all 2-way (default)
+0.790 ± 0.011
+0.018
+0.112
+MST
+default
+0.713 ± 0.031
+0.014
+0.128
+PATE-CTGAN
+–
+0.534 ± 0.043
+0.506
+0.705
+Ours, flow only
+–
+0.492 ± 0.054
+0.510
+0.719
+DP-CTGAN
+–
+0.484 ± 0.036
+0.298
+0.468
+
+
+Figure 7. Matched-ε comparison on Adult. Left: downstream utility (the dotted line marks chance). Right: 2-way marginal error. Blue: our pipeline with Stage 7c; red: our flow alone; grey: published DP synthesizers.
+3.7 Exploratory Stress Test on Small Cohorts
+This section is exploratory (5 seeds per dataset) and is not used as evidence for the main claims. Without Stage 7c, the flow was at chance on all four small datasets: Pima AUC 0.472 ± 0.065, bank churn 0.486 ± 0.052, Breast Cancer Wisconsin 0.309 ± 0.152, and an insurance regression task with R² = −4.1 ± 2.5. Changing the schedule did not help. On Pima, batch sizes from 32 to 512 and between 20 and 800 DP steps all gave AUC between 0.48 and 0.55, because the accountant raised the noise multiplier from 5.4 to 18.6 to pay for the additional steps. The below-chance mean on Wisconsin is not a signal. With so few steps the network stays close to its random initialisation, and the output correlations of that initialisation have a seed-specific sign: the same seed gave an AUC of about 0.1 even at ε = 50.
+4 Discussion
+In this work, we have shown that a design choice made for sample quality, minibatch OT coupling, invalidates the standard accounting of DP-SGD when the two are combined, and that independent coupling restores a provable guarantee without a detectable loss of utility. The finding rests on a theorem, on counterexamples found by search on two datasets, and on audits whose conclusions hold at 95% confidence for the audited pairs. The size of the effect depended on the data: within the standard accounting framework, the audited pairs force certificates 22% above the reported budget on Adult and 76% above it on Cardio. We did not characterise which data properties drive this difference. A plausible explanation is that Cardio has few, mostly numeric dimensions, so that one replaced record can move the OT assignment of many neighbours at once, but this remains to be tested.
+What matters most for practitioners is that the failure cannot be seen from the outside. The accountant reports the same ε for both couplings, and a black-box membership audit on the synthetic data, the check most often applied to released data, found no leakage even in a run that was almost non-private. This agrees with the view that implementation errors in DP training are best found by white-box auditing of the mechanism itself [28, 38]. The five leak classes of Section 3.3 share this property. Each left the privacy summary unchanged, each was found only by tracing the code paths that read private data, and each could be exploited on real data. Fixed seeds on noise paths, clipped noise, un-noised statistics stored in model buffers, data-dependent bin edges and silent schema fallbacks are generic mistakes, not properties of our system.
+The central result on utility is a negative one, and its scope needs to be stated precisely. Under the evaluated datasets, privacy levels and training configurations, the noisy marginal stage accounted for essentially all measured downstream utility, and removing the flow produced statistically equivalent performance. Two readings of this result are possible. On the one hand, it is consistent with the benchmark literature, in which marginal-based methods outperform deep generators under DP on tabular data [18]; under DP-SGD, the noise added to a network with many parameters overwhelms the signal from a few thousand records, whereas a table of counts carries the same label information with far less noise. On the other hand, it is a warning about attribution. A pipeline that combines a deep generator with a strong DP measurement will often look good, and without the ablation the credit naturally goes to the deep model. We recommend that DP generative papers report this ablation routinely.
+The comparison with AIM needs one further qualification. Our marginal stage is target-aware. Given the same target-aware workload, AIM narrowed the gap in downstream AUC from 0.12 to 0.034, while our pipeline kept a lower 2-way TVD (0.096 against 0.267), so the advantage does not come from the workload alone. A user with several downstream targets would need a workload that covers all of them, and we did not evaluate that setting. An adaptive version of the budget split (Supplementary Section S1) was no better than a fixed share of 0.9, which is unsurprising while one of the two mechanisms earns no budget.
+4.1 Threats to Validity
+Theoretical validity. Our violation results concern the standard DP-SGD accounting, which assumes per-example sensitivity C under add/remove adjacency; they do not exclude a weaker but valid mechanism-specific analysis of OT-CFM. The white-box audits condition on fixed batches and do not include privacy amplification by subsampling; they bound what the standard accounting can certify, not the privacy loss of the subsampled mechanism. Theorem 2 relies on assumptions A1–A4, in particular on a public cohort size (A2), which also makes the normalisation by the expected batch size post-processing [22]. The conversion to replace-one adjacency costs a factor of two in ε and (1 + eε) in δ (Equation 1).
+Empirical validity. The sensitivity searches are heuristics and may understate the worst case, which would only strengthen the conclusion. The audits certify violations for the audited pairs only. The main utility results rest on two datasets with 10 paired seeds; configuration sweeps used 3 seeds, and the small-cohort study is exploratory.
+External validity. We did not test cohorts larger than 20,000 records, public pretraining of the flow, or larger architectures such as transformers, which are the settings in which the flow is most likely to contribute. The marginal stage is target-aware, and the utility comparison applies to that setting.
+Implementation validity. Results depend on the software versions and hardware listed in Table 1 and Supplementary Table S5, including TF32 arithmetic. Experiments seed the random generators for reproducibility, and the noise is drawn from non-cryptographic generators; a production release must use unseeded, cryptographically secure noise, as provided by the secure mode of Opacus [10].
+5 Conclusions
+Minibatch optimal-transport coupling makes the gradient of each training example depend on its batch-mates, which invalidates the standard privacy accounting of DP-SGD without any visible sign in the reported budget. On two datasets, certified conditional audits of the worst neighbouring pairs found by search showed that certificates within the standard accounting framework must be at least 22% and 76% larger than the reported ones. Independent coupling restores the standard guarantee at no detectable cost, and we proved an end-to-end guarantee for a complete synthesis pipeline built on it. Checking that proof against the code exposed five classes of implementation defects that no privacy summary could reveal, each reproducible on real data. Under the evaluated datasets, privacy levels and training configurations, a jointly accounted, target-aware marginal stage accounted for essentially all measured utility, and no practically relevant contribution from the flow was detected under prespecified equivalence margins. These findings argue for white-box auditing of DP training code and for routine ablations that separate a deep generator from the simpler DP measurements it is combined with.
+Data and Code Availability
+All code, the formal privacy proof, the raw results of every experiment (including the 10⁶-trial audit outputs, per-seed utility results and leak reproductions), configuration files, random seeds and the scripts that regenerate every table and figure are archived at [repository URL and DOI to be inserted before submission]. Supplementary Section S6 maps each table and figure to the script and raw file that produce it. UCI Adult, the Kaggle cardiovascular disease dataset and the other benchmark datasets are publicly available from their original sources and are not redistributed.
+Supplementary Material
+Supplementary Material is available with this article: S1, the budget policy (DAPC): complete specification, adaptive split rule and robustness analysis; S2, formal mechanism specification and full proof of Theorem 2; S3, leak reproductions and minimal code patterns; S4, per-seed results and statistical tests; S5, full configuration and software environment; S6, artifact manifest.
+Acknowledgements
+[To be completed by the authors.]
+Author Contributions
+[To be completed by the authors.]
+Conflicts of Interest
+[To be completed by the authors.]
+References
+[1]	F. Ortuño, V. M. de la Oliva Roque, J.-I. Ramirez-Lopez, D. P. Kreil, J. Dopazo, and C. Loucera, &quot;High-fidelity synthetic data replicates clinical prediction performance in a million-patient diabetes cohort,&quot; Adv. Sci., vol. 13, e16196, 2026, doi:10.1002/advs.202516196.
+[2]	L. Xu, M. Skoularidou, A. Cuesta-Infante, and K. Veeramachaneni, &quot;Modeling tabular data using conditional GAN,&quot; in Advances in Neural Information Processing Systems (NeurIPS), 2019.
+[3]	A. Kotelnikov, D. Baranchuk, I. Rubachev, and A. Babenko, &quot;TabDDPM: Modelling tabular data with diffusion models,&quot; in Proc. Int. Conf. Machine Learning (ICML), 2023.
+[4]	H. Zhang, J. Zhang, B. Srinivasan, Z. Shen, X. Qin, C. Faloutsos, H. Rangwala, and G. Karypis, &quot;Mixed-type tabular data synthesis with score-based diffusion in latent space,&quot; in Proc. Int. Conf. Learning Representations (ICLR), 2024.
+[5]	C. Dwork, F. McSherry, K. Nissim, and A. Smith, &quot;Calibrating noise to sensitivity in private data analysis,&quot; in Proc. Theory of Cryptography Conf. (TCC), 2006, pp. 265–284.
+[6]	M. Abadi, A. Chu, I. Goodfellow, H. B. McMahan, I. Mironov, K. Talwar, and L. Zhang, &quot;Deep learning with differential privacy,&quot; in Proc. ACM SIGSAC Conf. Computer and Communications Security (CCS), 2016, pp. 308–318.
+[7]	J. Jordon, J. Yoon, and M. van der Schaar, &quot;PATE-GAN: Generating synthetic data with differential privacy guarantees,&quot; in Proc. Int. Conf. Learning Representations (ICLR), 2019.
+[8]	T. Dockhorn, T. Cao, A. Vahdat, and K. Kreis, &quot;Differentially private diffusion models,&quot; Trans. Machine Learning Research, 2023.
+[9]	X. Che, D. Xu, and X. Wu, &quot;StraightDP: Geometry-aware differential privacy for rectified-flow transformers,&quot; arXiv:2607.29100, 2026.
+[10]	A. Yousefpour, I. Shilov, A. Sablayrolles, D. Testuggine, K. Prasad, M. Malek, J. Nguyen, S. Ghosh, A. Bharadwaj, J. Zhao, G. Cormode, and I. Mironov, &quot;Opacus: User-friendly differential privacy library in PyTorch,&quot; arXiv:2109.12298, 2021.
+[11]	W. Kong, A. Muñoz Medina, and M. Ribero, &quot;Differentially private optimization for non-decomposable objective functions,&quot; in Proc. Int. Conf. Learning Representations (ICLR), 2025.
+[12]	Y. Lipman, R. T. Q. Chen, H. Ben-Hamu, M. Nickel, and M. Le, &quot;Flow matching for generative modeling,&quot; in Proc. Int. Conf. Learning Representations (ICLR), 2023.
+[13]	X. Liu, C. Gong, and Q. Liu, &quot;Flow straight and fast: Learning to generate and transfer data with rectified flow,&quot; in Proc. Int. Conf. Learning Representations (ICLR), 2023.
+[14]	A. Tong, K. Fatras, N. Malkin, G. Huguet, Y. Zhang, J. Rector-Brooks, G. Wolf, and Y. Bengio, &quot;Improving and generalizing flow-based generative models with minibatch optimal transport,&quot; Trans. Machine Learning Research, 2024.
+[15]	A.-A. Pooladian, H. Ben-Hamu, C. Domingo-Enrich, B. Amos, Y. Lipman, and R. T. Q. Chen, &quot;Multisample flow matching: Straightening flows with minibatch couplings,&quot; in Proc. Int. Conf. Machine Learning (ICML), 2023.
+[16]	R. McKenna, G. Miklau, and D. Sheldon, &quot;Winning the NIST contest: A scalable and general approach to differentially private synthetic data,&quot; J. Privacy and Confidentiality, vol. 11, no. 3, 2021.
+[17]	R. McKenna, B. Mullins, D. Sheldon, and G. Miklau, &quot;AIM: An adaptive and iterative mechanism for differentially private synthetic data,&quot; Proc. VLDB Endowment, vol. 15, no. 11, pp. 2599–2612, 2022.
+[18]	Y. Tao, R. McKenna, M. Hay, A. Machanavajjhala, and G. Miklau, &quot;Benchmarking differentially private synthetic data generation algorithms,&quot; arXiv:2112.09238, 2021.
+[19]	I. Mironov, &quot;Rényi differential privacy,&quot; in Proc. IEEE Computer Security Foundations Symp. (CSF), 2017, pp. 263–275.
+[20]	S. Gopi, Y. T. Lee, and L. Wutschitz, &quot;Numerical composition of differential privacy,&quot; in Advances in Neural Information Processing Systems (NeurIPS), 2021.
+[21]	J. Dong, A. Roth, and W. J. Su, &quot;Gaussian differential privacy,&quot; J. Royal Statistical Society Series B, vol. 84, no. 1, pp. 3–37, 2022.
+[22]	W. Wang, S. Cui, H. Cui, and X. Yuan, &quot;Rethinking the security of DP-SGD: A corrected analysis of differentially private machine learning,&quot; arXiv:2605.15648, 2026.
+[23]	I. Mironov, &quot;On significance of the least significant bits for differential privacy,&quot; in Proc. ACM Conf. Computer and Communications Security (CCS), 2012, pp. 650–661.
+[24]	H. W. Kuhn, &quot;The Hungarian method for the assignment problem,&quot; Naval Research Logistics Quarterly, vol. 2, no. 1–2, pp. 83–97, 1955.
+[25]	A. Sklar, &quot;Fonctions de répartition à n dimensions et leurs marges,&quot; Publ. Inst. Statist. Univ. Paris, vol. 8, pp. 229–231, 1959.
+[26]	C. J. Clopper and E. S. Pearson, &quot;The use of confidence or fiducial limits illustrated in the case of the binomial,&quot; Biometrika, vol. 26, no. 4, pp. 404–413, 1934.
+[27]	M. Nasr, S. Song, A. Thakurta, N. Papernot, and N. Carlini, &quot;Adversary instantiation: Lower bounds for differentially private machine learning,&quot; in Proc. IEEE Symp. Security and Privacy (S&amp;P), 2021, pp. 866–882.
+[28]	M. Nasr, J. Hayes, T. Steinke, B. Balle, F. Tramèr, M. Jagielski, N. Carlini, and A. Terzis, &quot;Tight auditing of differentially private machine learning,&quot; in Proc. USENIX Security Symp., 2023.
+[29]	T. Steinke, M. Nasr, and M. Jagielski, &quot;Privacy auditing with one (1) training run,&quot; in Advances in Neural Information Processing Systems (NeurIPS), 2023.
+[30]	B. Becker and R. Kohavi, &quot;Adult,&quot; UCI Machine Learning Repository, 1996, doi:10.24432/C5XW20.
+[31]	S. Ulianova, &quot;Cardiovascular disease dataset,&quot; Kaggle, 2019. [Online]. Available: https://www.kaggle.com/datasets/sulianova/cardiovascular-disease-dataset
+[32]	J. W. Smith, J. E. Everhart, W. C. Dickson, W. C. Knowler, and R. S. Johannes, &quot;Using the ADAP learning algorithm to forecast the onset of diabetes mellitus,&quot; in Proc. Annu. Symp. Computer Applications in Medical Care, 1988, pp. 261–265.
+[33]	OpenDP, &quot;SmartNoise synthesizers (smartnoise-synth), version 1.0.8,&quot; 2024. [Online]. Available: https://github.com/opendp/smartnoise-sdk
+[34]	L. Rosenblatt, X. Liu, S. Pouyanfar, E. de Leon, A. Desai, and J. Allen, &quot;Differentially private synthetic data: Applied evaluations and enhancements,&quot; arXiv:2011.05537, 2020.
+[35]	F. Wilcoxon, &quot;Individual comparisons by ranking methods,&quot; Biometrics Bulletin, vol. 1, no. 6, pp. 80–83, 1945.
+[36]	D. J. Schuirmann, &quot;A comparison of the two one-sided tests procedure and the power approach for assessing the equivalence of average bioavailability,&quot; J. Pharmacokinetics and Biopharmaceutics, vol. 15, no. 6, pp. 657–680, 1987.
+[37]	M. Jagielski, J. Ullman, and A. Oprea, &quot;Auditing differentially private machine learning: How private is private SGD?&quot; in Advances in Neural Information Processing Systems (NeurIPS), 2020.
+[38]	F. Tramèr, A. Terzis, T. Steinke, S. Song, M. Jagielski, and N. Carlini, &quot;Debugging differential privacy: A case study for privacy auditing,&quot; arXiv:2202.12219, 2022.
