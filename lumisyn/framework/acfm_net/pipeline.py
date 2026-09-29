@@ -39,7 +39,7 @@ from acfm_net.generative import (
     ContinuousOTCFM,
 )
 from acfm_net.repair import ConstrainedGradientRepairLoop
-from acfm_net.repair.constraint_repair import enforce_domain_constraints, enforce_public_domain_constraints
+from acfm_net.repair.constraint_repair import enforce_domain_constraints, enforce_public_domain_constraints, enforce_relational_rules
 from acfm_net.postprocessing.dp_recalibration import DPMarginalRecalibrator
 from acfm_net.postprocessing.conditional_marginals import ConditionalMarginals
 
@@ -210,6 +210,8 @@ class ACFMNetV5Pipeline:
         pretrain_on_marginals: bool = False,
         pretrain_epochs: int = 20,
         dp_finetune: bool = True,
+        relational_rules: bool = False,
+        conditional_bins: int = 32,
     ):
         if not strict_release_privacy and not allow_nonprivate_debug:
             raise ValueError(
@@ -265,6 +267,8 @@ class ACFMNetV5Pipeline:
         # (post-processing of an already-accounted release, so it costs no privacy budget).
         self.pretrain_on_marginals = bool(pretrain_on_marginals)
         self.pretrain_epochs = int(pretrain_epochs)
+        self.conditional_bins = int(conditional_bins)  # Stage 7c bins per numeric column (public)
+        self.relational_rules = bool(relational_rules)  # opt-in public rule, e.g. systolic >= diastolic + 10
         self.dp_finetune = bool(dp_finetune)  # False = ablation: DP steps still run and are accounted, but lr = 0
 
         # -- GPU / Device detection --------------------------------------------
@@ -685,7 +689,7 @@ class ACFMNetV5Pipeline:
         cond_marg, cm_noise = None, None
         if use_7c:
             cols_spec = public_schema.get("columns", public_schema)
-            cond_marg = ConditionalMarginals(cols_spec, target_col, list(df_deidentified.columns))
+            cond_marg = ConditionalMarginals(cols_spec, target_col, list(df_deidentified.columns), n_bins=self.conditional_bins)
             share = None if self.conditional_marginals == "adaptive" else float(self.conditional_marginals)
             cm_noise = self.budget_allocator.marginal_noise_multiplier(
                 num_samples=len(X_cpu),
@@ -1482,6 +1486,10 @@ class ACFMNetV5Pipeline:
                 "epsilon_charged": self.recalibration_epsilon,
                 "mechanism": "Laplace",
             })
+
+        if self.relational_rules:  # after 7c/7b, which can move values across rows within a class
+            df_synthetic, rel_stats = enforce_relational_rules(df_synthetic, public_schema.get("columns", public_schema))
+            next(r for r in report["stage_reports"] if r["stage"] == "7")["evidence"]["relational_rules"] = rel_stats
 
         report["pipeline_status"]  = "SUCCESS"
         report["synthetic_shape"]  = df_synthetic.shape

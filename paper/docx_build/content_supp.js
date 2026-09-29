@@ -19,7 +19,7 @@ const p = (t) => B.push({ type: "p", text: t });
 const h1 = (t) => B.push({ type: "h1", text: t });
 const h2 = (t) => B.push({ type: "h2", text: t });
 
-B.push({ type: "title", text: "Supplementary Material for: Minibatch Optimal Transport Invalidates Standard DP-SGD Accounting in Private Flow Matching for Tabular Data" });
+B.push({ type: "title", text: `Supplementary Material for: ${process.env.MAIN_TITLE || "Minibatch Optimal Transport Invalidates Standard DP-SGD Accounting in Private Flow Matching for Tabular Data"}` });
 B.push({ type: "authors", text: "[Author Name]¹, [Author Name]², [Author Name]³, [Author Name]¹*" });
 B.push({ type: "affil", lines: ["[Affiliations as in the main text]"] });
 

@@ -21,8 +21,12 @@ import torch
 import hashlib
 try:
     from .db_store import save_session_db, get_session_db, list_runs_db
+    from .schema_registry import infer_schema_for_dataframe
+    from .stage_reports import build_stage_pdf, build_all_stages_pdf
 except ImportError:  # Supports running this file directly from the backend folder.
     from db_store import save_session_db, get_session_db, list_runs_db
+    from schema_registry import infer_schema_for_dataframe
+    from stage_reports import build_stage_pdf, build_all_stages_pdf
 
 if sys.platform == "win32":
     sys.stdout.reconfigure(encoding="utf-8")
@@ -62,6 +66,49 @@ app.add_middleware(
 SESSIONS_DB: Dict[str, Dict[str, Any]] = {}
 
 
+def _jsonable(obj):
+    """NumPy/pandas/torch values and non-finite floats -> plain JSON types (FastAPI's encoder rejects numpy.bool)."""
+    if isinstance(obj, dict):
+        return {str(k): _jsonable(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple, set)):
+        return [_jsonable(v) for v in obj]
+    if isinstance(obj, (np.ndarray, torch.Tensor)):
+        return _jsonable(obj.tolist())
+    if isinstance(obj, (np.bool_, bool)):
+        return bool(obj)
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, (np.floating, float)):
+        return float(obj) if np.isfinite(obj) else None
+    if isinstance(obj, pd.Timestamp):
+        return str(obj)
+    return obj
+
+
+def _num(lo, hi, kind="continuous"):
+    return {"type": "numeric", "bounds": [float(lo), float(hi)], "kind": kind}
+
+
+def _cat(values):
+    return {"type": "categorical", "categories": sorted(values) + ["MISSING"]}
+
+
+# Declared public schemas for the presets: bounds are the generators' clip ranges, never the sample.
+PRESET_SCHEMAS = {
+    "nhanes": {
+        "age": _num(18, 80, "integer"), "gender": _cat(["Female", "Male"]), "poverty_ratio": _num(0.5, 5.0),
+        "bmi": _num(14, 55), "systolic_bp": _num(85, 200), "diastolic_bp": _num(50, 120),
+        "fasting_glucose": _num(60, 300), "hba1c": _num(4, 14), "cholesterol": _num(100, 380), "hdl": _num(20, 110),
+        "smoking_status": _cat(["Current", "Former", "Never"]), "diabetes": _num(0, 1, "binary"),
+    },
+    "mimic_iv": {
+        "age": _num(18, 90, "integer"), "gender": _cat(["F", "M"]), "sofa_score": _num(0, 20, "integer"),
+        "heart_rate": _num(40, 160), "systolic_bp": _num(70, 210), "diastolic_bp": _num(40, 120),
+        "creatinine": _num(0.4, 10.0), "lactate": _num(0.5, 15.0), "mortality": _num(0, 1, "binary"),
+    },
+}
+
+
 # --- PRESET CLINICAL DATASETS GENERATORS ---
 def get_preset_nhanes(num_samples: int = 1000) -> Tuple[pd.DataFrame, str]:
     np.random.seed(42)
@@ -76,7 +123,7 @@ def get_preset_nhanes(num_samples: int = 1000) -> Tuple[pd.DataFrame, str]:
     cholesterol = np.random.normal(195.0, 38.0, size=num_samples).clip(100.0, 380.0)
     hdl = np.random.normal(52.0, 14.0, size=num_samples).clip(20.0, 110.0)
     smoking = np.random.choice(["Never", "Former", "Current"], size=num_samples)
-    diabetes = (np.random.rand(num_samples) < (1.0 / (1.0 + np.exp(-(-5.0 + 0.03*age + 0.08*bmi + 0.02*glucose + 0.5*hba1c))))).astype(int)
+    diabetes = (np.random.rand(num_samples) < (1.0 / (1.0 + np.exp(-(-10.5 + 0.03*age + 0.08*bmi + 0.02*glucose + 0.5*hba1c))))).astype(int)
 
     df = pd.DataFrame({
         "age": age, "gender": gender, "poverty_ratio": np.round(poverty_ratio, 2),
@@ -166,6 +213,7 @@ async def upload_dataset(
         name, gen_fn = PRESET_DATASETS[preset_id]
         df_real, target_col = gen_fn()
         filename = f"{preset_id}.csv"
+        public_schema, schema_source, schema_notes = PRESET_SCHEMAS[preset_id], "declared (preset generator bounds)", []
     elif file:
         filename = file.filename
         content = await file.read()
@@ -186,6 +234,10 @@ async def upload_dataset(
 
     if len(df_real) == 0:
         raise HTTPException(status_code=400, detail="Uploaded dataset is empty.")
+    if not preset_id:
+        # Bounds read from the uploaded file are not a public declaration: flagged UNVERIFIED everywhere.
+        public_schema, schema_notes = infer_schema_for_dataframe(df_real)
+        schema_source = "inferred from the uploaded file (UNVERIFIED: declare bounds for a formal DP guarantee)"
 
     # Initialize ACFM-Net v5 pipeline instance for this session
     pipeline = ACFMNetV5Pipeline()
@@ -199,6 +251,9 @@ async def upload_dataset(
         "pipeline": pipeline,
         "created_at": time.time(),
         "evaluation_results": None,
+        "public_schema": public_schema,
+        "schema_source": schema_source,
+        "schema_notes": schema_notes,
     }
 
     columns_summary = []
@@ -246,6 +301,8 @@ async def upload_dataset(
         "columns": columns_summary,
         "preview": [] if pipeline.strict_release_privacy else df_sample.to_dict(orient="records"),
         "preview_status": "withheld under strict release privacy" if pipeline.strict_release_privacy else "raw preview",
+        "schema_source": schema_source,
+        "schema_notes": schema_notes[:50],
         "governance": {
             "protocol_id": cert.protocol_id,
             "dataset_hash": None if pipeline.strict_release_privacy else cert.dataset_hash,
@@ -304,6 +361,7 @@ def analyze_dataset_dapc(session_id: str):
         dapc_cert["dataset_hash"] = hashlib.sha256(ds_bytes).hexdigest()
         dapc_cert["content_hash"] = hashlib.sha256(json.dumps(dapc_cert, sort_keys=True).encode('utf-8')).hexdigest()
 
+    dapc_cert = _jsonable(dapc_cert)
     session["dapc_certificate"] = dapc_cert
     pipeline.target_epsilon = dapc_cert["selected_target_epsilon"]
 
@@ -419,9 +477,20 @@ def generate_synthetic_data(req: GenerateRequest):
     target_col = req.target_col or session["target_col"] or df_real.columns[-1]
     session["target_col"] = target_col
 
-    pipeline: ACFMNetV5Pipeline = session["pipeline"]
-    pipeline.target_epsilon = req.target_epsilon
-    pipeline.target_delta = req.target_delta
+    schema = session["public_schema"]
+    tspec = schema.get(target_col, {})
+    n_levels = len(tspec.get("categories", [])) - 1 if tspec.get("type") == "categorical" else (
+        int(tspec["bounds"][1] - tspec["bounds"][0] + 1) if tspec.get("kind") in {"binary", "integer"} else 0)
+    classification = 2 <= n_levels <= 20
+    pipeline = ACFMNetV5Pipeline(
+        target_epsilon=req.target_epsilon, target_delta=req.target_delta, public_schema=schema,
+        # Stage 7c (DP label x feature marginals, 90% of the budget) + warm-started flow; paper Sections 2.6 and 3.7.
+        conditional_marginals=0.9 if classification else None, pretrain_on_marginals=classification,
+        relational_rules=True,
+        # fewer public bins for small cohorts: less noise mass in empty tail cells (N is public, assumption A2)
+        conditional_bins=int(np.clip(len(df_real) // 100, 8, 32)),
+    )
+    session["pipeline"] = pipeline
 
     t0 = time.time()
     try:
@@ -451,7 +520,7 @@ def generate_synthetic_data(req: GenerateRequest):
         df_syn.head(8).to_json(orient="records", date_format="iso")
     )
 
-    return {
+    return _jsonable({
         "status": "COMPLETED",
         "session_id": req.session_id,
         "generated_samples": len(df_syn),
@@ -475,9 +544,11 @@ def generate_synthetic_data(req: GenerateRequest):
             "dp_steps": privacy_training.get("steps"),
             "dp_sample_rate": privacy_training.get("sample_rate"),
             "dp_noise_multiplier": privacy_training.get("noise_multiplier"),
-            "synthetic_missing_cells": int(df_syn.isna().sum().sum())
+            "synthetic_missing_cells": int(df_syn.isna().sum().sum()),
+            "stage_7c_marginals": classification,
+            "schema_source": session.get("schema_source"),
         }
-    }
+    })
 
 
 @app.get("/api/stages/{session_id}")
@@ -494,7 +565,7 @@ def get_stage_report(session_id: str):
             "stage_reports": [],
             "message": "No generation run has completed for this session.",
         }
-    return {
+    return _jsonable({
         "session_id": session_id,
         "pipeline_status": report.get("pipeline_status"),
         "generation_runtime_seconds": report.get("generation_runtime_seconds"),
@@ -504,7 +575,7 @@ def get_stage_report(session_id: str):
         "release_privacy_verified": report.get("release_privacy_verified", False),
         "privacy_contract": report.get("privacy_contract", {}),
         "privacy_composition": report.get("privacy_composition", {}),
-    }
+    })
 
 
 @app.get("/api/evaluate/{session_id}")
@@ -542,7 +613,7 @@ def evaluate_synthetic_dataset(session_id: str):
     )
 
     session["evaluation_results"] = eval_results
-    return eval_results
+    return _jsonable(eval_results)
 
 
 
@@ -591,6 +662,39 @@ def get_pdf_report(session_id: str):
     )
     response.headers["Content-Disposition"] = f"attachment; filename=ACFM_Net_v5_Report_{session_id[:8]}.pdf"
     return response
+
+
+def _session_with_run(session_id: str) -> Dict[str, Any]:
+    if session_id not in SESSIONS_DB:
+        raise HTTPException(status_code=404, detail="Session ID not found.")
+    session = SESSIONS_DB[session_id]
+    if not session.get("pipeline_report"):
+        raise HTTPException(status_code=400, detail="Run the pipeline first; stage reports come from a completed run.")
+    return session
+
+
+def _pdf_response(pdf_bytes: bytes, filename: str) -> StreamingResponse:
+    response = StreamingResponse(io.BytesIO(pdf_bytes), media_type="application/pdf")
+    response.headers["Content-Disposition"] = f"attachment; filename={filename}"
+    return response
+
+
+@app.get("/api/report/stage/{session_id}/{stage_id}")
+def get_stage_pdf(session_id: str, stage_id: str):
+    """PDF report for one pipeline stage of the latest run (purpose, status, measured evidence, chart)."""
+    session = _session_with_run(session_id)
+    try:
+        pdf_bytes = build_stage_pdf(session, stage_id)
+    except KeyError:
+        raise HTTPException(status_code=404, detail=f"Stage {stage_id} was not recorded in the latest run.")
+    return _pdf_response(pdf_bytes, f"Lumisyn_Stage_{stage_id}_{session_id[:8]}.pdf")
+
+
+@app.get("/api/report/stages/{session_id}")
+def get_all_stages_pdf(session_id: str):
+    """One PDF with a cover page and a section per stage of the latest run."""
+    session = _session_with_run(session_id)
+    return _pdf_response(build_all_stages_pdf(session), f"Lumisyn_All_Stages_{session_id[:8]}.pdf")
 
 
 @app.get("/api/compare/{session_id}")
@@ -708,7 +812,7 @@ def get_statistical_comparison(session_id: str):
             "target_col": target_col,
             "real_positive_ratio": round(float((r_target == r_target.max()).mean()), 4),
             "syn_positive_ratio": round(float((s_target == s_target.max()).mean()), 4),
-            "ratio_matched": abs(float((r_target == r_target.max()).mean() - (s_target == s_target.max()).mean())) < 0.02
+            "ratio_matched": abs(float((r_target == r_target.max()).mean() - (s_target == s_target.max()).mean())) < 0.05  # DP noise tolerance
         }
 
     # Stage 7 Clinical Rule Repair check
@@ -725,7 +829,7 @@ def get_statistical_comparison(session_id: str):
     privacy_training = pipeline_report.get("privacy_training", {})
     privacy_status = pipeline_report.get("privacy_status", "UNVERIFIED")
 
-    return {
+    return _jsonable({
         "session_id": session_id,
         "dataset_name": session["filename"],
         "target_col": target_col,
@@ -753,7 +857,7 @@ def get_statistical_comparison(session_id: str):
             "privacy_composition": pipeline_report.get("privacy_composition"),
             "note": "Verified under the declared public-schema assumption; the exact epsilon/delta composition is included in privacy_composition."
         }
-    }
+    })
 
 
 

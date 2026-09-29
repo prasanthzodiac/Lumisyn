@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Upload, ShieldCheck, FileSpreadsheet, CheckCircle2, Cpu, ChevronRight, LayoutDashboard, Layers, GitBranch, Lock, Play, BarChart2 } from 'lucide-react';
 import { apiUrl } from '../api/client';
 import SyntheticOutputTransformation from './SyntheticOutputTransformation';
+import StageReportLinks from './StageReportLinks';
 
 const PRESETS = [
   {
@@ -35,6 +36,7 @@ const STAGES = [
   { id: '6', visual: 6, title: "Stage 6: Latent Generator (OT-CFM)", desc: "Initializing the continuous latent flow field...", icon: Play },
   { id: '8', visual: 8, title: "Stage 8: DP Optimization", desc: "Training the latent generator with measured per-example DP-SGD...", icon: BarChart2 },
   { id: '7', visual: 7, title: "Stage 7: Constrained Repair Loop", desc: "Applying measured domain-constraint repair statistics...", icon: CheckCircle2 },
+  { id: '7c', visual: 5, title: "Stage 7c: DP Class-Conditional Marginals", desc: "Releasing noisy label × feature tables (jointly accounted) and mapping each class onto them...", icon: Lock },
   { id: '9', visual: 9, title: "Stage 9: Synthetic Data Output", desc: "Releasing actual decoded synthetic rows after repair and privacy checks...", icon: FileSpreadsheet }
 ];
 
@@ -47,6 +49,7 @@ export default function DatasetUploader({ onDatasetLoaded, setCurrentScreen }) {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [activeStageIdx, setActiveStageIdx] = useState(0);
   const [stagePercentage, setStagePercentage] = useState(0);
+  const [genError, setGenError] = useState(null);
 
   // Animations ticker
   const [ticker, setTicker] = useState(0);
@@ -145,48 +148,55 @@ export default function DatasetUploader({ onDatasetLoaded, setCurrentScreen }) {
     setFlowState('pipeline');
     setActiveStageIdx(0);
     setStagePercentage(0);
+    setGenError(null);
 
-    // Progression loop for each of the 10 stages
-    for (let i = 0; i < STAGES.length; i++) {
-      setActiveStageIdx(i);
-      
-      // Animate percentage for each stage
-      for (let p = 0; p <= 100; p += 10) {
+    // Start the real backend run at once; the stage visuals cycle until its measured result arrives.
+    let done = false;
+    const genPromise = fetch(apiUrl("/api/generate"), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        session_id: uploadedData.session_id,
+        num_samples: Math.min(uploadedData.row_count || 1000, 5000),
+        target_epsilon: 1.0,
+        epochs: 10,
+        target_col: uploadedData.suggested_target
+      })
+    }).then(async (res) => {
+      if (!res.ok) {
+        let detail = `Generation failed (${res.status})`;
+        try { detail = (await res.json()).detail || detail; } catch { /* non-JSON error body */ }
+        throw new Error(detail);
+      }
+      return res.json();
+    }).finally(() => { done = true; });
+    genPromise.catch(() => {});
+
+    for (let i = 0; !done; i++) {
+      setActiveStageIdx(i % STAGES.length);
+      for (let p = 0; p <= 100 && !done; p += 20) {
         setStagePercentage(p);
-        await new Promise(r => setTimeout(r, 220));
+        await new Promise(r => setTimeout(r, 180));
       }
     }
 
-    // Trigger PyTorch backend generation
     try {
-      const genRes = await fetch(apiUrl("/api/generate"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          session_id: uploadedData.session_id,
-          num_samples: 1000,
-          target_epsilon: 1.0,
-          epochs: 10,
-          target_col: uploadedData.suggested_target
-        })
-      });
-      if (!genRes.ok) throw new Error(`Generation failed (${genRes.status})`);
-      const genData = await genRes.json();
+      const genData = await genPromise;
       setUploadResult(prev => ({ ...prev, ...genData }));
-      
-      // Fetch comparative data for dashboard overview
+      setActiveStageIdx(STAGES.length - 1);
+      setStagePercentage(100);
+      await new Promise(r => setTimeout(r, 1500)); // show the measured stage statuses before moving on
+
       const cmpRes = await fetch(apiUrl(`/api/compare/${uploadedData.session_id}`));
-      const cmpData = await cmpRes.json();
-      
+      const cmpData = cmpRes.ok ? await cmpRes.json() : null;
       if (onDatasetLoaded) {
         onDatasetLoaded({ ...uploadedData, generationResult: genData }, cmpData);
       }
-      
-      setFlowState('complete');
     } catch (err) {
       console.error("Model synthesis error:", err);
-      setFlowState('complete');
+      setGenError(err.message || 'Generation failed.');
     }
+    setFlowState('complete');
   };
 
   // ─── STAGE-SPECIFIC INTERACTIVE VISUALIZERS ───
@@ -714,11 +724,11 @@ export default function DatasetUploader({ onDatasetLoaded, setCurrentScreen }) {
                 Pipeline Model Execution Status
               </span>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px', color: 'var(--accent-violet)', fontWeight: '700' }}>
-                {Math.min(100, Math.round(((activeStageIdx) / STAGES.length) * 100 + (stagePercentage / 10)))}% Complete
+                {uploadResult?.stage_report ? 'Measured result received' : 'Backend run in progress…'}
               </span>
             </div>
             <div className="progress-track" style={{ marginBottom: '10px' }}>
-              <div className="progress-fill" style={{ width: `${Math.min(100, ((activeStageIdx) / STAGES.length) * 100 + (stagePercentage / 10))}%` }} />
+              <div className="progress-fill" style={{ width: uploadResult?.stage_report ? '100%' : `${Math.min(95, ((activeStageIdx + stagePercentage / 100) / STAGES.length) * 95)}%` }} />
             </div>
           </div>
 
@@ -737,7 +747,7 @@ export default function DatasetUploader({ onDatasetLoaded, setCurrentScreen }) {
                   const measuredComplete = measured?.status === 'PASSED' || measured?.status === 'READY';
                   const isPassed = Boolean(measuredComplete);
                   const isCurrent = idx === activeStageIdx;
-                  const displayStatus = measured?.status || (isCurrent ? 'RUNNING' : idx < activeStageIdx ? 'QUEUED' : 'WAITING');
+                  const displayStatus = measured?.status || (isCurrent ? 'RUNNING' : 'PENDING');
                   
                   return (
                     <div key={stg.id} style={{
@@ -835,7 +845,15 @@ export default function DatasetUploader({ onDatasetLoaded, setCurrentScreen }) {
       )}
 
       {/* ─── FLOW STATE 4: Completion (Show Governance scan + proceed button) ─── */}
-      {flowState === 'complete' && uploadResult && (
+      {flowState === 'complete' && genError && (
+        <div className="panel animate-in" style={{ padding: '24px', borderColor: 'rgba(239,68,68,0.3)', textAlign: 'center' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '700', color: 'var(--accent-rose)' }}>Synthesis did not complete</h2>
+          <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: '6px 0 14px' }}>{genError}</p>
+          <button className="btn-primary" onClick={() => { setGenError(null); setFlowState('idle'); }}>Try again</button>
+        </div>
+      )}
+
+      {flowState === 'complete' && !genError && uploadResult && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           
           {/* Completion Banner */}
@@ -907,7 +925,14 @@ export default function DatasetUploader({ onDatasetLoaded, setCurrentScreen }) {
               </div>
               <span className="badge badge--emerald">Ready</span>
             </div>
+            {uploadResult.schema_source && (
+              <div style={{ padding: '8px 14px', fontSize: '10px', color: 'var(--text-muted)', borderTop: '1px solid var(--border-default)' }}>
+                Public schema: {uploadResult.schema_source}
+              </div>
+            )}
           </div>
+
+          <StageReportLinks sessionId={uploadResult.session_id} stageReport={uploadResult.stage_report} />
         </div>
       )}
     </div>

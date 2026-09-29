@@ -69,3 +69,15 @@ The search did surface one naming clash. Warm-start flow matching (Kim 2026, arX
 - Add an AI-assistance disclosure if the target journal requires one. IEEE requires disclosure in the acknowledgements.
 - Run iThenticate or Turnitin before submission.
 - Three references are 2026 arXiv preprints: StraightDP, Wang et al. and Kim (WS-FM). They were still preprints on 2026-09-27; update them if they are published before submission.
+
+## 6. Budget-allocation manuscript (`Lumisyn_AdaptiveBudget_FlowMatching_Manuscript.docx`)
+
+- **Built from:** the same study, via `docx_build/content_adaptive.js`. That script rewrites the title, abstract, introduction, Section 2.5, the new Section 3.8, the opening of the Discussion and the Conclusions. All methods, results, tables and figures are shared with the main manuscript.
+- **Length:** 10,012 body words, and a 243-word abstract (IEEE limit 250).
+- **Overlap:** 0 shared 8-word or 12-word sequences with any of the seven reference texts. The 5-word matches range from 0.00% to 0.09%.
+- **Style:** 0 hits from the AI-style word list, and 0 em-dashes.
+- **Validation:** passes the Office Open XML schema validator. The preview PDF was checked on pages 1, 6 and 16.
+- **Honesty of the framing:**
+  - The title names the topic, adaptive budget allocation.
+  - The abstract and results state that DAPC adapts the *total* budget and is stable, not that it is optimal for utility.
+  - They state that the pre-registered ε-adaptive *division* did not beat a fixed division.

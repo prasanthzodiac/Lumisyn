@@ -135,13 +135,13 @@ export default function StatisticalComparisonReport({ sessionData }) {
 
         <div className="panel" style={{ padding: '14px' }}>
           <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>
-            MIA Privacy Protection
+            Real vs synthetic detectability (C2ST)
           </div>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: '18px', fontWeight: '700', color: 'var(--accent-violet)', marginTop: '4px' }}>
-            AUC = {evalData?.privacy?.mia?.mia_auc ?? '—'}
+            AUC = {evalData?.privacy?.mia?.c2st_auc ?? evalData?.privacy?.mia?.mia_auc ?? '—'}
           </div>
-          <div style={{ fontSize: '10px', color: 'var(--accent-emerald)', marginTop: '2px' }}>
-            {evalData?.privacy?.mia?.privacy_risk_level || 'Not measured'}
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px', lineHeight: 1.4 }}>
+            Fidelity check: 0.5 = indistinguishable. Privacy is guaranteed by the DP accounting, not by this score.
           </div>
         </div>
       </div>

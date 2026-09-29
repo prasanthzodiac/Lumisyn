@@ -58,7 +58,7 @@ export default function ExperimentHistoryScreen({ sessionData: _sessionData }) {
             Experiment History & Audit Log
           </h2>
           <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-            Audit log of all ACFM-Net runs, target privacy budgets $\epsilon^*$, DAPC risk scores ($R_P$), and Privacy Decision Certificates.
+            Audit log of all ACFM-Net runs, target privacy budgets ε*, DAPC risk scores (R_P), and Privacy Decision Certificates.
           </p>
         </div>
         <button onClick={fetchRuns} disabled={loading} className="btn btn--secondary" style={{ fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -105,9 +105,9 @@ export default function ExperimentHistoryScreen({ sessionData: _sessionData }) {
             <tr>
               <th>Run ID</th>
               <th>Dataset</th>
-              <th>Shape ($N \times D$)</th>
-              <th>Selected Target $\epsilon^*$</th>
-              <th>Soft-Max Risk $R_P$</th>
+              <th>Shape (N × D)</th>
+              <th>Selected Target ε*</th>
+              <th>Soft-Max Risk R_P</th>
               <th>DAPC Decision</th>
               <th>Status</th>
               <th>Created At</th>
@@ -119,7 +119,7 @@ export default function ExperimentHistoryScreen({ sessionData: _sessionData }) {
               <tr key={run.run_id}>
                 <td className="td-primary" style={{ fontFamily: 'var(--font-mono)' }}>{run.run_id.slice(0, 8)}</td>
                 <td>{run.dataset_name}</td>
-                <td className="td-mono">{run.row_count?.toLocaleString()} $\times$ {run.col_count}</td>
+                <td className="td-mono">{run.row_count?.toLocaleString()} × {run.col_count}</td>
                 <td className="td-mono" style={{ color: 'var(--accent-emerald)', fontWeight: '700' }}>
                   {run.target_epsilon == null ? '—' : Number(run.target_epsilon).toFixed(3)}
                 </td>

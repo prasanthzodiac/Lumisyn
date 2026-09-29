@@ -166,6 +166,35 @@ def enforce_domain_constraints(
     return df_clean
 
 
+BP_PAIRS = [("systolic", "diastolic"), ("ap_hi", "ap_lo")]
+
+
+def enforce_relational_rules(df: pd.DataFrame, schema: Dict[str, Any], gap: float = 10.0) -> Tuple[pd.DataFrame, Dict[str, Any]]:
+    """Public clinical rule on decoded rows: systolic >= diastolic + gap. Post-processing only
+    (reads synthetic rows and declared bounds), so it costs no privacy budget."""
+    out = df.copy()
+    cols = {c.lower(): c for c in out.columns}
+    stats = {}
+    for s_key, d_key in BP_PAIRS:
+        s_col = next((c for k, c in cols.items() if s_key in k), None)
+        d_col = next((c for k, c in cols.items() if d_key in k), None)
+        if s_col is None or d_col is None:
+            continue
+        s = pd.to_numeric(out[s_col], errors="coerce")
+        d = pd.to_numeric(out[d_col], errors="coerce")
+        s_lo, s_hi = (schema.get(s_col, {}).get("bounds") or [s.min(), s.max()])
+        d_lo, _ = (schema.get(d_col, {}).get("bounds") or [d.min(), d.max()])
+        bad = s < d + gap
+        before = int(bad.sum())
+        d = d.where(~bad, np.maximum(s - gap, d_lo))
+        s = s.where(s >= d + gap, np.minimum(d + gap, s_hi))
+        out[s_col] = s.astype(out[s_col].dtype, errors="ignore")
+        out[d_col] = d.astype(out[d_col].dtype, errors="ignore")
+        stats[f"{s_col} >= {d_col} + {gap:g}"] = {"violations_before": before,
+                                                  "violations_after": int((s < d + gap).sum())}
+    return out, stats
+
+
 def enforce_public_domain_constraints(df: pd.DataFrame, feature_specs: Dict[str, Any]) -> pd.DataFrame:
     """Apply only declared schema bounds; never read cohort extrema."""
     from acfm_net.preparation.encoding import _detect_column_kind

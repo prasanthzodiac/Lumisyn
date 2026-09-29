@@ -59,14 +59,21 @@ class EvaluationReportBuilder:
             return json.dumps(eval_results, indent=2, default=_json_default).encode("utf-8")
 
         pdf = FPDF()
+        import os
+        import matplotlib
+        font_dir = os.path.join(os.path.dirname(matplotlib.__file__), "mpl-data", "fonts", "ttf")
+        # Unicode font: core Helvetica cannot encode '—' or 'ε' and made this endpoint return 500.
+        pdf.add_font("DejaVu", "", os.path.join(font_dir, "DejaVuSans.ttf"))
+        pdf.add_font("DejaVu", "B", os.path.join(font_dir, "DejaVuSans-Bold.ttf"))
+        pdf.add_font("DejaVu", "I", os.path.join(font_dir, "DejaVuSans-Oblique.ttf"))
         pdf.set_auto_page_break(auto=True, margin=15)
         pdf.add_page()
 
         # --- Title ---
-        pdf.set_font("Helvetica", "B", 18)
+        pdf.set_font("DejaVu", "B", 18)
         pdf.cell(0, 12, "ACFM-Net v5 — Synthetic Data Evaluation Report", ln=True, align="C")
 
-        pdf.set_font("Helvetica", "", 10)
+        pdf.set_font("DejaVu", "", 10)
         ts = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         pdf.cell(0, 8, f"Generated: {ts}   |   Dataset: {dataset_name}", ln=True, align="C")
         pdf.ln(4)
@@ -138,7 +145,7 @@ class EvaluationReportBuilder:
         pdf.ln(4)
 
         # --- Footer ---
-        pdf.set_font("Helvetica", "I", 8)
+        pdf.set_font("DejaVu", "I", 8)
         pdf.set_text_color(150, 150, 150)
         pdf.cell(0, 6,
                  "ACFM-Net v5 | Adaptive Constraint-Guided Flow Matching | Confidential Research Output",
@@ -148,15 +155,15 @@ class EvaluationReportBuilder:
 
     # --- helpers ---
     def _section(self, pdf: "FPDF", title: str):
-        pdf.set_font("Helvetica", "B", 12)
+        pdf.set_font("DejaVu", "B", 12)
         pdf.set_fill_color(30, 80, 160)
         pdf.set_text_color(255, 255, 255)
         pdf.cell(0, 8, f"  {title}", ln=True, fill=True)
         pdf.set_text_color(0, 0, 0)
-        pdf.set_font("Helvetica", "", 10)
+        pdf.set_font("DejaVu", "", 10)
 
     def _row(self, pdf: "FPDF", label: str, value: str):
-        pdf.set_font("Helvetica", "B", 9)
+        pdf.set_font("DejaVu", "B", 9)
         pdf.cell(80, 7, f"  {label}:", border=0)
-        pdf.set_font("Helvetica", "", 9)
+        pdf.set_font("DejaVu", "", 9)
         pdf.cell(0,  7, value, border=0, ln=True)

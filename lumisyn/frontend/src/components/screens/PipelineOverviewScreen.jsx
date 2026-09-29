@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Database, Cpu, GitBranch, Layers, Lock, Play, ShieldCheck, BarChart2, FileSpreadsheet, CheckCircle2, ChevronRight } from 'lucide-react';
 import PipelineVisualizer from '../PipelineVisualizer';
+import StageReportLinks from '../StageReportLinks';
 import { apiUrl } from '../../api/client';
 
 const pipelineStages = [
@@ -14,6 +15,7 @@ const pipelineStages = [
   { id: '6',  name: "Flow Matching",    sub: "DP Generator",        icon: Play,          color: 'cyan'   },
   { id: '8',  name: "Optimization",     sub: "DP Training",          icon: BarChart2,     color: 'violet' },
   { id: '7',  name: "Repair",           sub: "Constraint pass",     icon: ShieldCheck,   color: 'cyan'   },
+  { id: '7c', name: "DP Marginals",     sub: "Label × feature",     icon: Lock,          color: 'emerald'},
   { id: '9',  name: "Synthetic Data",   sub: "Measured output",     icon: FileSpreadsheet,color: 'emerald'},
 ];
 
@@ -53,7 +55,7 @@ export default function PipelineOverviewScreen({ sessionData, onGenerationComple
 
       {/* ─── Real-Time Synthesizer ─── */}
       <div className="panel animate-in" style={{ padding: '20px' }}>
-        <PipelineVisualizer sessionData={sessionData} onGenerationComplete={onGenerationComplete} />
+        <PipelineVisualizer sessionData={sessionData} onGenerationComplete={onGenerationComplete} initialResult={generationResult} />
       </div>
 
       {/* ─── Pipeline Flow ─── */}
@@ -137,7 +139,7 @@ export default function PipelineOverviewScreen({ sessionData, onGenerationComple
           const c = colorMap[stg.color];
           const Icon = stg.icon;
           const measured = reportFor(stg.id);
-          const progress = measured ? (measured.status === 'PASSED' || measured.status === 'READY' ? 100 : 50) : 0;
+          const progress = measured ? (['PASSED', 'READY', 'SKIPPED'].includes(measured.status) ? 100 : 50) : 0;
           return (
             <div key={stg.id} className="panel animate-in" style={{ padding: '14px', animationDelay: `${i * 40}ms` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
@@ -156,7 +158,7 @@ export default function PipelineOverviewScreen({ sessionData, onGenerationComple
                   <div style={{ fontSize: '11px', fontWeight: '600', color: 'var(--text-primary)' }}>{stg.name}</div>
                   <div style={{ fontSize: '9px', color: 'var(--text-muted)' }}>{stg.sub}</div>
                 </div>
-                <span className={`badge ${progress === 100 ? 'badge--emerald' : 'badge--cyan'}`} style={{ marginLeft: 'auto' }}>{measured?.status || 'Pending'}</span>
+                <span className={`badge ${measured?.status === 'SKIPPED' ? '' : progress === 100 ? 'badge--emerald' : 'badge--cyan'}`} style={{ marginLeft: 'auto' }}>{measured?.status || 'Pending'}</span>
               </div>
               <div className="progress-track">
                 <div className="progress-fill progress-fill--emerald" style={{ width: `${progress}%` }} />
@@ -169,6 +171,8 @@ export default function PipelineOverviewScreen({ sessionData, onGenerationComple
           );
         })}
       </div>
+
+      <StageReportLinks sessionId={sessionData?.session_id} stageReport={reports} />
 
       {/* ─── Status Footer ─── */}
       <div className="panel" style={{

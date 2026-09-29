@@ -88,7 +88,7 @@ export default function AdaptivePrivacyControllerScreen({ sessionData, compariso
             Stage 5: Dataset-Adaptive Privacy Budget Controller (DAPC v6)
           </h2>
           <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-            DP-Sanitized Meta-Selection Engine with Soft-Max Monotonic Risk Model ($R_P$) & Policy Envelope $[0.40, 1.00]$.
+            DP-Sanitized Meta-Selection Engine with Soft-Max Monotonic Risk Model (R_P) & Policy Envelope [0.40, 1.00].
           </p>
         </div>
 
@@ -128,7 +128,7 @@ export default function AdaptivePrivacyControllerScreen({ sessionData, compariso
         {/* ─── Left Panel: Epsilon Gauge & Policy Envelope ─── */}
         <div className="panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '18px' }}>
           <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '700', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-            Adaptive Privacy Target — $\epsilon^*$
+            Adaptive Privacy Target — ε*
           </div>
 
           {/* SVG Donut Gauge */}

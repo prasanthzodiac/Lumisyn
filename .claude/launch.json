@@ -1,0 +1,18 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "lumisyn-backend",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "uvicorn", "backend.app_backend:app", "--host", "127.0.0.1", "--port", "8000", "--app-dir", "lumisyn"],
+      "port": 8000,
+      "url": "http://127.0.0.1:8000"
+    },
+    {
+      "name": "lumisyn-frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "lumisyn/frontend", "run", "dev"],
+      "port": 3001
+    }
+  ]
+}

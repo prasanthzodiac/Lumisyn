@@ -14,6 +14,7 @@ const stageDefinitions = [
   { id: '6', title: 'Stage 6: Latent Generator (OT-CFM)', desc: 'Continuous latent flow field initialization', icon: Play },
   { id: '8', title: 'Stage 8: DP Optimization', desc: 'Measured DP-SGD flow training diagnostics', icon: BarChart2 },
   { id: '7', title: 'Stage 7: Constrained Repair Loop', desc: 'Measured domain-constraint repair statistics', icon: RefreshCw },
+  { id: '7c', title: 'Stage 7c: DP Class-Conditional Marginals', desc: 'Noisy label × feature tables, jointly accounted', icon: Lock },
   { id: '9', title: 'Stage 9: Synthetic Data Output', desc: 'Actual decoded rows through repair and release', icon: Layers },
 ];
 
@@ -25,13 +26,13 @@ const statusColors = {
   RUNNING: { text: '#3730a3', bg: 'rgba(99,102,241,0.08)', border: 'rgba(99,102,241,0.2)' },
 };
 
-export default function PipelineVisualizer({ sessionData, onGenerationComplete }) {
+export default function PipelineVisualizer({ sessionData, onGenerationComplete, initialResult = null }) {
   const [samples, setSamples] = useState(1000);
   const [epsilon, setEpsilon] = useState(1.0);
   const [epochs, setEpochs] = useState(10);
   const [generating, setGenerating] = useState(false);
   const [activeStage, setActiveStage] = useState(0);
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState(initialResult);
 
   const stages = stageDefinitions;
   const [error, setError] = useState(null);
@@ -59,14 +60,19 @@ export default function PipelineVisualizer({ sessionData, onGenerationComplete }
           target_col: sessionData.suggested_target
         })
       });
-      // Keep the visualizer moving while the real backend run executes. Cards
-      // remain RUNNING/QUEUED until measured stage records arrive.
-      for (let i = 0; i < stages.length; i++) {
-        setActiveStage(i);
-        await new Promise((r) => setTimeout(r, 180));
+      // Cycle the stage highlight while the real backend run executes; statuses come from its measured records.
+      let done = false;
+      generationRequest.finally(() => { done = true; }).catch(() => {});
+      for (let i = 0; !done; i++) {
+        setActiveStage(i % stages.length);
+        await new Promise((r) => setTimeout(r, 400));
       }
       const res = await generationRequest;
-      if (!res.ok) throw new Error(`Generation failed (${res.status})`);
+      if (!res.ok) {
+        let detail = `Generation failed (${res.status})`;
+        try { detail = (await res.json()).detail || detail; } catch { /* non-JSON error body */ }
+        throw new Error(detail);
+      }
       const data = await res.json();
       setResult(data);
       if (onGenerationComplete) onGenerationComplete(data);
@@ -145,7 +151,7 @@ export default function PipelineVisualizer({ sessionData, onGenerationComplete }
           const Icon = stg.icon;
           const measured = result?.stage_report?.find(item => String(item.stage) === stg.id);
           const isActive = generating && idx === activeStage;
-          const status = measured?.status || (isActive ? 'RUNNING' : generating && idx < activeStage ? 'QUEUED' : 'WAITING');
+          const status = measured?.status || (isActive ? 'RUNNING' : generating ? 'PENDING' : 'WAITING');
           const statusStyle = statusColors[status] || { text: 'var(--text-muted)', bg: 'rgba(0,0,0,0.03)', border: 'transparent' };
           const isComplete = status === 'PASSED' || status === 'READY';
 

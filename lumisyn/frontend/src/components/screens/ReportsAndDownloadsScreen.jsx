@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { FileText, Download, FileCheck, Zap, Lock } from 'lucide-react';
 import { apiUrl } from '../../api/client';
+import StageReportLinks from '../StageReportLinks';
 
 const reportCards = [
   { title: "PDF Report",   desc: "Full academic & clinical validation report PDF",   color: 'rose',   format: 'PDF' },
@@ -22,6 +23,17 @@ const colorClasses = {
 };
 
 export default function ReportsAndDownloadsScreen({ sessionData }) {
+  const [stageReport, setStageReport] = useState([]);
+  useEffect(() => {
+    if (!sessionData?.session_id) return undefined;
+    let active = true;
+    fetch(apiUrl(`/api/stages/${sessionData.session_id}`))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (active) setStageReport(d?.stage_reports || []); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [sessionData?.session_id, sessionData?.lastRunAt]);
+
   const handleDownload = (format) => {
     if (!sessionData?.session_id) {
       alert("No active session found. Please upload a dataset first.");
@@ -153,6 +165,8 @@ export default function ReportsAndDownloadsScreen({ sessionData }) {
           })}
         </div>
       </div>
+
+      <StageReportLinks sessionId={sessionData?.session_id} stageReport={stageReport} title="Per-Stage Reports (PDF)" />
     </div>
   );
 }

@@ -170,7 +170,7 @@ export default function ClinicalKnowledgeGraphScreen({ sessionData }) {
         <div>
           <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '5px' }}>Clinical Graph Rationale</div>
           <p style={{ fontSize: '11px', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
-            Structured via Stage 3 DCGB prior topology $W_0$ fused with Mutual Information $I(X; Y)$ and Stage 3b Post-Latent Cosine Refinement ($\alpha = 0.60$).
+            Edge strengths are measured on a 300-row sample of the uploaded data for this operator view only. The released model uses the public Stage 3 prior topology W₀ (column names and clinical ontology); in strict mode no private statistic enters the graph.
           </p>
         </div>
 
