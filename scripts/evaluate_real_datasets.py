@@ -39,7 +39,7 @@ for name, path, target_col in datasets:
         print("No explicit patient ID column; row-level records.")
         
     y = df[target_col]
-    if y.dtype == object:
+    if y.dtype == object or isinstance(y.dtype, pd.StringDtype):
         y = (y.astype(str).str.strip().isin([">50K", ">50K.", "1", "True"])).astype(int)
     else:
         y = y.astype(int)

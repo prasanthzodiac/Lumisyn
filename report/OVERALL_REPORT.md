@@ -1,5 +1,7 @@
 # Stage 0-9 & Generation Path Fix-and-Test Pass: Comprehensive Report
 
+> **Snapshot note (2026-09-29):** the figures below record the state at the end of that pass. The suite has since grown; a rerun on 2026-09-29 (Python 3.11, pandas 3.0.6) gave **90 passed, 1 skipped** (`test_schema_invariance.py` skips when the non-redistributed `adult.csv` is absent). Coverage was not re-measured.
+
 **Branch**: `fix-test-stages-pass`  
 **Execution Mode**: Strict Empirical Verification (Zero fabricated numbers)  
 **Total Tests Passing**: **64 / 64 (100%)** (Zero failures, zero errors)  

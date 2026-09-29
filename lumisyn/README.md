@@ -20,6 +20,13 @@ $env:PYTHONPATH = "$PWD\framework;$PWD"
 python -m uvicorn backend.app_backend:app --host 127.0.0.1 --port 8000
 ```
 
+On Linux/macOS:
+
+```bash
+export PYTHONPATH="$PWD/framework:$PWD"
+python -m uvicorn backend.app_backend:app --host 127.0.0.1 --port 8000
+```
+
 In a second terminal:
 
 ```powershell
@@ -38,6 +45,15 @@ python -m pytest backend/tests -q
 cd frontend
 npm run build
 ```
+
+On Linux/macOS, `pytest` can also be run from the repository root, where `pytest.ini` sets the paths:
+
+```bash
+python -m pytest -q
+cd lumisyn/frontend && npm run build
+```
+
+`test_schema_invariance.py` is skipped unless `lumisyn/data/kaggle_datasets/adult.csv` is present (datasets are not redistributed; see below).
 
 ## Reproducing the paper (`paper/main.tex`)
 

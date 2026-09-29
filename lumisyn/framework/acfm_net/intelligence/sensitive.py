@@ -46,7 +46,8 @@ class SensitiveAttributeDetector:
             # a data-dependent statistic. The public column-name rules remain.
             if use_data_dependent_risk:
                 unique_ratio = df[col].nunique() / max(len(df), 1)
-                if unique_ratio > 0.8 and df[col].dtype == "object":
+                is_text = df[col].dtype == object or isinstance(df[col].dtype, pd.StringDtype)
+                if unique_ratio > 0.8 and is_text:
                     score = max(score, 0.85)
 
             sensitivity_vector[i] = score

@@ -1,22 +1,22 @@
-import React, { useState } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import Sidebar from './components/Sidebar';
 import TopHeader from './components/TopHeader';
 import { apiUrl } from './api/client';
-
-import DashboardScreen from './components/screens/DashboardScreen';
 import DatasetUploadScreen from './components/DatasetUploader';
-import DatasetIntelligenceScreen from './components/screens/DatasetIntelligenceScreen';
-import DataVisualizationScreen from './components/screens/DataVisualizationScreen';
-import ClinicalKnowledgeGraphScreen from './components/screens/ClinicalKnowledgeGraphScreen';
-import PipelineOverviewScreen from './components/screens/PipelineOverviewScreen';
-import StageDetailsHVAEScreen from './components/screens/StageDetailsHVAEScreen';
-import AdaptivePrivacyControllerScreen from './components/screens/AdaptivePrivacyControllerScreen';
-import FlowMatchingAnimationScreen from './components/screens/FlowMatchingAnimationScreen';
-import OriginalVsSyntheticScreen from './components/screens/OriginalVsSyntheticScreen';
-import StatisticalValidationScreen from './components/screens/StatisticalValidationScreen';
-import ClinicalConsistencyScreen from './components/screens/ClinicalConsistencyScreen';
-import ExperimentHistoryScreen from './components/screens/ExperimentHistoryScreen';
-import ReportsAndDownloadsScreen from './components/screens/ReportsAndDownloadsScreen';
+
+const DashboardScreen = lazy(() => import('./components/screens/DashboardScreen'));
+const DatasetIntelligenceScreen = lazy(() => import('./components/screens/DatasetIntelligenceScreen'));
+const DataVisualizationScreen = lazy(() => import('./components/screens/DataVisualizationScreen'));
+const ClinicalKnowledgeGraphScreen = lazy(() => import('./components/screens/ClinicalKnowledgeGraphScreen'));
+const PipelineOverviewScreen = lazy(() => import('./components/screens/PipelineOverviewScreen'));
+const StageDetailsHVAEScreen = lazy(() => import('./components/screens/StageDetailsHVAEScreen'));
+const AdaptivePrivacyControllerScreen = lazy(() => import('./components/screens/AdaptivePrivacyControllerScreen'));
+const FlowMatchingAnimationScreen = lazy(() => import('./components/screens/FlowMatchingAnimationScreen'));
+const OriginalVsSyntheticScreen = lazy(() => import('./components/screens/OriginalVsSyntheticScreen'));
+const StatisticalValidationScreen = lazy(() => import('./components/screens/StatisticalValidationScreen'));
+const ClinicalConsistencyScreen = lazy(() => import('./components/screens/ClinicalConsistencyScreen'));
+const ExperimentHistoryScreen = lazy(() => import('./components/screens/ExperimentHistoryScreen'));
+const ReportsAndDownloadsScreen = lazy(() => import('./components/screens/ReportsAndDownloadsScreen'));
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState('upload');
@@ -103,7 +103,7 @@ export default function App() {
         )}
 
         <main className="screen-container" style={currentScreen === 'upload' ? { display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' } : {}}>
-          {renderScreen()}
+          <Suspense fallback={null}>{renderScreen()}</Suspense>
         </main>
       </div>
     </div>

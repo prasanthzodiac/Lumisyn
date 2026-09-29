@@ -127,7 +127,8 @@ class ClinicalDataGovernanceLayer:
         Returns list of column names containing PHI values.
         """
         flagged = []
-        str_cols = df.select_dtypes(include=["object"]).columns
+        # "string" covers the pandas>=3 default str dtype, which "object" no longer selects.
+        str_cols = df.select_dtypes(include=["object", "string"]).columns
         for col in str_cols:
             sample = df[col].dropna().astype(str).head(200)
             for pattern_name, pattern in self._PHI_VALUE_PATTERNS.items():

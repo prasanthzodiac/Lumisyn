@@ -19,7 +19,8 @@ def test_schema_dimension_invariance_on_category_removal():
         schema_dict = yaml.safe_load(f)["columns"]
 
     data_path = "lumisyn/data/kaggle_datasets/adult.csv"
-    assert os.path.exists(data_path), "adult.csv must exist"
+    if not os.path.exists(data_path):
+        pytest.skip("adult.csv is not redistributed; place it in lumisyn/data/kaggle_datasets/")
 
     df_full = pd.read_csv(data_path)
     df_base = df_full.sample(n=5000, random_state=42).reset_index(drop=True)

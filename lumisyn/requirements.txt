@@ -10,3 +10,4 @@ opacus
 reportlab
 pydantic
 rich
+pyyaml
