@@ -14,6 +14,8 @@ Open http://localhost:3001.
 
 Check before a demo: `python lumisyn/backend/tests/demo_smoke.py nhanes`. It needs the backend running and takes about 2 minutes. It exercises every endpoint and every stage PDF, and must end with `DEMO SMOKE TEST PASSED`.
 
+Sessions are kept in memory. After a backend restart, load the dataset again, because the old session ids return 404.
+
 ## Demo path (about 5 minutes)
 
 1. **Landing page → NHANES preset.**

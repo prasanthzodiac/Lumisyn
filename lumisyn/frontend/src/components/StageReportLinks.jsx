@@ -24,7 +24,7 @@ export default function StageReportLinks({ sessionId, stageReport, title = 'Stag
           <FileDown size={13} /> <span>All stages (PDF)</span>
         </a>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '8px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '8px' }}>
         {stageReport.map((s) => (
           <a
             key={s.stage}
